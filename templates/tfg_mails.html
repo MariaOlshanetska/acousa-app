@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="{{ lang }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Generador TFG</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    .wrap{ max-width: 1100px; margin: 0 auto; padding: 2rem 1rem 3rem; }
+    .toplink{ display:inline-block; margin-bottom:1rem; }
+    .card{
+      background:#fff;
+      border-radius:16px;
+      padding:1.2rem;
+      box-shadow:0 10px 25px rgba(0,0,0,.06);
+      margin-top:1rem;
+    }
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:1rem;
+    }
+    label{ font-weight:600; display:block; margin-bottom:.35rem; }
+    input[type="text"], input[type="email"], textarea, input[type="file"]{
+      width:100%;
+      box-sizing:border-box;
+      padding:.65rem .8rem;
+      border:1px solid #e5d5cc;
+      border-radius:12px;
+      font:inherit;
+      background:#fffaf6;
+    }
+    textarea{ min-height:240px; resize:vertical; }
+    .btnrow{ display:flex; flex-wrap:wrap; gap:.75rem; margin-top:1rem; }
+    button{
+      border:none;
+      border-radius:999px;
+      padding:.7rem 1.1rem;
+      font:inherit;
+      font-weight:600;
+      cursor:pointer;
+      background:#e56c47;
+      color:#fff;
+    }
+    button.secondary{ background:#f69c7a; }
+    .muted{ color:#666; }
+    .alert{
+      background:#fff1ed;
+      color:#9a3412;
+      border:1px solid #fdc7b5;
+      padding:.8rem 1rem;
+      border-radius:12px;
+      margin-top:1rem;
+    }
+    .ok{
+      background:#f2fbf6;
+      color:#166534;
+      border:1px solid #b7e4c7;
+      padding:.8rem 1rem;
+      border-radius:12px;
+      margin-top:1rem;
+    }
+    table{
+      width:100%;
+      border-collapse:collapse;
+      margin-top:1rem;
+      font-size:.95rem;
+    }
+    th, td{
+      border-bottom:1px solid #eee;
+      padding:.6rem .5rem;
+      text-align:left;
+      vertical-align:top;
+    }
+    pre{
+      white-space:pre-wrap;
+      word-wrap:break-word;
+      margin:0;
+      font-family:inherit;
+    }
+    .small-link{
+      display:inline-block;
+      margin-top:.75rem;
+      font-size:.95rem;
+    }
+    @media (max-width: 900px){
+      .grid{ grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <a class="toplink" href="/recursos?lang={{ lang }}">⟵ Tornar a recursos</a>
+
+    <h1>Generador de correus TFG</h1>
+    <p class="muted">
+      Puja un Excel amb les columnes <strong>Nom</strong>, <strong>Correu</strong> i <strong>Tutor</strong>.
+      El sistema genera borradors .eml i també un Excel amb el contingut.
+    </p>
+
+    {% if error_message %}
+      <div class="alert">{{ error_message }}</div>
+    {% endif %}
+
+    {% if status_message %}
+      <div class="ok">{{ status_message }}</div>
+    {% endif %}
+
+    <div class="card">
+      <form action="/recursos/tfg-mails/preview" method="post" enctype="multipart/form-data">
+        <input type="hidden" name="lang" value="{{ lang }}">
+
+        <div class="grid">
+          <div>
+            <div style="margin-bottom:1rem;">
+              <label for="excel">Excel</label>
+              <input type="file" id="excel" name="excel" accept=".xlsx,.xls" required>
+            </div>
+
+            <div style="margin-bottom:1rem;">
+              <label for="coordinadora">Coordinadora</label>
+              <input type="text" id="coordinadora" name="coordinadora" value="{{ coordinadora }}" required>
+            </div>
+
+            <div style="margin-bottom:1rem;">
+              <label for="remitent_email">Correu del remitent</label>
+              <input type="email" id="remitent_email" name="remitent_email" value="{{ remitent_email }}" required>
+            </div>
+
+            <div style="margin-bottom:1rem;">
+              <label for="assumpte">Assumpte</label>
+              <input type="text" id="assumpte" name="assumpte" value="{{ assumpte }}" required>
+            </div>
+
+            <div style="margin-bottom:1rem;">
+              <label for="country_id">País per a la inferència del nom</label>
+              <input type="text" id="country_id" name="country_id" value="{{ country_id }}" maxlength="2">
+              <div class="muted" style="margin-top:.35rem;">Exemple: ES. Si la inferència no és clara, el sistema fa servir salutació neutra.</div>
+            </div>
+          </div>
+
+          <div>
+            <label for="template_text">Plantilla</label>
+            <textarea id="template_text" name="template_text" required>{{ template_text }}</textarea>
+            <div class="muted" style="margin-top:.5rem;">
+              Variables disponibles: <code>{salutacio}</code>, <code>{Nom}</code>, <code>{Tutor}</code>, <code>{coordinadora}</code>
+            </div>
+          </div>
+        </div>
+
+        <div class="btnrow">
+          <button type="submit">Previsualitzar</button>
+        </div>
+      </form>
+    </div>
+
+    {% if preview_ready %}
+      <div class="card">
+        <h2>Descàrregues</h2>
+
+        <div class="btnrow">
+          <form action="/recursos/tfg-mails/download-zip" method="post">
+            <input type="hidden" name="upload_id" value="{{ upload_id }}">
+            <input type="hidden" name="coordinadora" value="{{ coordinadora }}">
+            <input type="hidden" name="remitent_email" value="{{ remitent_email }}">
+            <input type="hidden" name="assumpte" value="{{ assumpte }}">
+            <input type="hidden" name="template_text" value="{{ template_text }}">
+            <input type="hidden" name="country_id" value="{{ country_id }}">
+            <button type="submit">Descarrega ZIP (.eml)</button>
+          </form>
+
+          <form action="/recursos/tfg-mails/download-excel" method="post">
+            <input type="hidden" name="upload_id" value="{{ upload_id }}">
+            <input type="hidden" name="coordinadora" value="{{ coordinadora }}">
+            <input type="hidden" name="remitent_email" value="{{ remitent_email }}">
+            <input type="hidden" name="assumpte" value="{{ assumpte }}">
+            <input type="hidden" name="template_text" value="{{ template_text }}">
+            <input type="hidden" name="country_id" value="{{ country_id }}">
+            <button class="secondary" type="submit">Descarrega Excel</button>
+          </form>
+        </div>
+
+        <p class="muted" style="margin-top:.75rem;">
+          L'Excel queda guardat temporalment al servidor durant unes hores per facilitar la descàrrega. Després s'elimina.
+        </p>
+      </div>
+
+      <div class="card">
+        <h2>Vista prèvia</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Nom</th>
+              <th>Correu</th>
+              <th>Tutor</th>
+              <th>Mode</th>
+              <th>Salutació</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in rows %}
+              <tr>
+                <td>{{ r.Nom }}</td>
+                <td>{{ r.Correu }}</td>
+                <td>{{ r.Tutor }}</td>
+                <td>{{ r.tractament_mode }}</td>
+                <td>{{ r.salutacio }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+
+        {% if rows %}
+          <h3 style="margin-top:1.2rem;">Primer correu</h3>
+          <pre>{{ rows[0].cos_correu }}</pre>
+        {% endif %}
+      </div>
+    {% endif %}
+
+    <div class="banner" style="margin-top:1.5rem;">
+      <img src="/static/Banner.png" alt="Banner">
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ ui.result_title }}</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    :root{
+      --bg: #fff7f3;
+      --text: #2f2f2f;
+      --muted: #666;
+      --border: rgba(0,0,0,.06);
+      --shadow: 0 14px 30px rgba(0,0,0,.06);
+      --pill: #111111;
+      --pill-hover: #222222;
+      --soft-box: #fffaf8;
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background: linear-gradient(90deg, #c9b6ff 0%, #ffd7b8 100%) no-repeat;
+      background-size: 100% 220px;
+      background-color: var(--bg);
+    }
+
+    .page{ max-width:980px; margin:0 auto; padding:1.5rem 1rem 3rem; min-height:100vh; }
+    .shell{
+      background: rgba(255,255,255,.92);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      padding: 1.2rem;
+      backdrop-filter: blur(6px);
+    }
+    .topbar{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:1rem; margin-bottom:.8rem;
+    }
+    .title{ margin:.2rem 0 0 0; font-size:1.35rem; font-weight:750; }
+    .intro{ margin:.35rem 0 0 0; color:var(--muted); line-height:1.4; }
+
+    .lang-pill{
+      display:inline-flex; align-items:center; gap:.55rem;
+      padding:.38rem .8rem; border-radius:999px;
+      background:#111111; border:1px solid #111111;
+      box-shadow:0 10px 22px rgba(0,0,0,.08);
+    }
+    .lang-pill__txt{ font-size:.78rem; font-weight:800; letter-spacing:.08em; color:#fff; }
+    .lang-pill__select{ position:relative; display:inline-flex; align-items:center; }
+    .lang-pill select{
+      appearance:none; border:1px solid var(--border); background:#fff; color:var(--text);
+      border-radius:999px; padding:.28rem 1.8rem .28rem .7rem;
+      font-size:.9rem; font-weight:600; cursor:pointer;
+    }
+    .lang-pill__chev{ position:absolute; right:.65rem; pointer-events:none; color:#666; font-size:.8rem; }
+
+    .results-card, .info-card{
+      background: var(--soft-box);
+      border-radius: 16px;
+      padding: 1.2rem 1.2rem 1.4rem;
+      border: 1px solid rgba(0,0,0,.05);
+      box-shadow: 0 10px 22px rgba(0,0,0,.04);
+      margin-top: 1rem;
+    }
+
+    .plot-wrap{
+      margin-top:1.25rem; margin-bottom:1.25rem; padding:1rem;
+      border-radius:14px; border:1px solid rgba(0,0,0,.06); background:#fff;
+    }
+
+    .result-group{
+      margin-top:1rem;
+      padding:1rem 1rem .8rem;
+      border-radius:14px;
+      border:1px solid rgba(0,0,0,.06);
+      background:#ffffff;
+    }
+    .result-group h4{
+      margin:.1rem 0 .55rem;
+      font-size:1rem;
+      font-weight:800;
+      color:#333;
+    }
+    .plotly-group{
+      width:100%;
+    }
+
+    .actions{ display:flex; gap:.75rem; flex-wrap:wrap; margin-top:1rem; }
+    .back-link, .download-btn{
+      display:inline-flex; align-items:center; justify-content:center;
+      min-height:44px; padding:.72rem 1.2rem; border-radius:999px;
+      background: var(--pill); color:#fff; text-decoration:none; font-weight:700;
+      border:none; box-shadow:0 10px 22px rgba(0,0,0,.08);
+      transition: background .12s ease, transform .12s ease;
+    }
+    .back-link:hover, .download-btn:hover{ background: var(--pill-hover); transform: translateY(-1px); text-decoration:none; }
+
+    .banner{ margin-top:1.5rem; text-align:center; }
+    .banner img{
+      max-width:100%; border-radius:16px; box-shadow: 0 14px 30px rgba(0,0,0,.06);
+      border: 1px solid rgba(0,0,0,.05);
+    }
+
+    pre{
+      white-space:pre-wrap; background:#fff; padding:.9rem 1rem; border-radius:12px;
+      border:1px solid #f3d4c5; color:#444;
+    }
+
+    .plotly-group,
+    #plotly-results {
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+    }
+
+    .plot-wrap,
+    .result-group {
+      overflow: hidden;
+      max-width: 100%;
+    }
+
+    @media (max-width: 640px){
+      .page{
+        padding: .8rem .45rem 2rem;
+      }
+
+      .shell{
+        padding: .75rem;
+        border-radius: 16px;
+      }
+
+      .results-card,
+      .info-card{
+        padding: 1rem .75rem 1.15rem;
+      }
+
+      .plot-wrap{
+        padding: .75rem .35rem;
+      }
+
+      .result-group{
+        padding: .8rem .35rem .7rem;
+      }
+
+      .plot-wrap h3,
+      .result-group h4{
+        padding-left: .35rem;
+        padding-right: .35rem;
+      }
+    }
+
+    @media (max-width: 760px){
+      .topbar{ flex-direction:column; align-items:flex-start; }
+      .lang-pill{ align-self:flex-end; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="shell">
+      <div class="topbar">
+        <div>
+          <h1 class="title">{{ ui.app_title }}</h1>
+          <p class="intro">{{ ui.result_title }}</p>
+        </div>
+
+        <div class="lang-pill">
+          <span class="lang-pill__txt">LANG</span>
+          <span class="lang-pill__select">
+            <select id="langSel" onchange="window.location='{{ lang_switch_url }}?lang=' + this.value;">
+              <option value="ca" {% if lang == "ca" %}selected{% endif %}>CA</option>
+              <option value="es" {% if lang == "es" %}selected{% endif %}>ES</option>
+              <option value="en" {% if lang == "en" %}selected{% endif %}>EN</option>
+            </select>
+            <span class="lang-pill__chev">▾</span>
+          </span>
+        </div>
+      </div>
+
+      <div class="results-card">
+        <h2>{{ ui.result_title }}</h2>
+        <p>{{ ui.file_analyzed }} <strong>{{ filename }}</strong></p>
+        <p>{{ ui.task_result_label }} <strong>{{ task_label }}</strong></p>
+
+        {% if interpretation_global or interpretation_comment %}
+          <div style="margin-top:1rem;padding:1rem 1.1rem;border-radius:1rem;border:1px solid rgba(242, 189, 160, 0.6);background:#fffaf7;">
+            {% if interpretation_global %}
+              <div style="font-size:1.08rem;font-weight:800;margin-bottom:.45rem;">
+                {{ interpretation_global }}
+              </div>
+            {% endif %}
+            {% if interpretation_comment %}
+              <div style="color:#555;line-height:1.55;">
+                {{ interpretation_comment }}
+              </div>
+            {% endif %}
+          </div>
+        {% endif %}
+
+        {% if reference_text %}
+          <div class="info-card">
+            <h3>{{ ui.reading_reference_title if ui.reading_reference_title is defined else "Texto de referencia" }}</h3>
+            <p style="line-height:1.6; color:#555;">{{ reference_text }}</p>
+          </div>
+        {% endif %}
+
+        {% if transcription_text %}
+          <div class="info-card">
+            <h3>{{ ui.automatic_transcription_title }}</h3>
+            <p style="line-height:1.6; color:#555; white-space:pre-wrap;">{{ transcription_text }}</p>
+            <p style="font-size:.9rem;color:#777;margin-top:.7rem;">
+              {{ ui.automatic_transcription_note }}
+            </p>
+          </div>
+        {% endif %}
+
+        {# RLE se muestra ahora dentro del bloque de Complejidad léxica. #}
+
+        {% if row_groups %}
+          <div class="plot-wrap">
+            <h3>{{ ui.plot_title if ui.plot_title is defined else "Perfil de resultados" }}</h3>
+            {% if task == "habla_libre" %}
+              <p style="font-size:.9rem;color:#777;margin-top:-.2rem;">
+                {{ ui.results_plot_note_habla_libre }}
+              </p>
+            {% endif %}
+
+            {% for group in row_groups %}
+              <section class="result-group">
+                <h4>{{ group.title }}</h4>
+                <div id="plotly-results-group-{{ loop.index0 }}" class="plotly-group"></div>
+              </section>
+            {% endfor %}
+          </div>
+        {% elif rows %}
+          <div class="plot-wrap">
+            <h3>{{ ui.plot_title if ui.plot_title is defined else "Perfil de resultados" }}</h3>
+            <div id="plotly-results" style="width:100%;"></div>
+          </div>
+        {% endif %}
+
+        {% set help_rows = rows | selectattr("help_text") | list %}
+
+        {% if help_rows %}
+          <div class="info-card">
+            <h3>{{ ui.measures_guide_title }}</h3>
+            <p style="line-height:1.6;color:#666;">
+              {{ ui.measures_guide_intro }}
+            </p>
+
+            {% for r in help_rows %}
+              <details style="margin-top:.65rem;padding:.75rem .9rem;border-radius:.8rem;background:#fff;border:1px solid rgba(0,0,0,.06);">
+                <summary style="cursor:pointer;font-weight:750;color:#333;">
+                  {{ r.label }}
+                  {% if r.value is not none %}
+                    <span style="font-weight:600;color:#777;">
+                      — {{ r.value }} {{ r.unit }}
+                    </span>
+                  {% endif %}
+                </summary>
+                <p style="line-height:1.6;color:#555;margin-top:.65rem;">
+                  {{ r.help_text }}
+                </p>
+              </details>
+            {% endfor %}
+          </div>
+        {% endif %}
+
+        {% if f0_summary_text %}
+          <div style="margin-top:1rem;padding:0.9rem 1rem;border-radius:0.9rem;border:1px solid rgba(242, 189, 160, 0.6);background:#fffaf7;color:#555;line-height:1.5;">
+            {{ f0_summary_text }}
+          </div>
+        {% endif %}
+
+        <div class="actions">
+          {% if csv_data_uri %}
+            <a class="download-btn" href="{{ csv_data_uri }}" download="{{ csv_download_name }}">
+              {{ ui.download_csv if ui.download_csv is defined else "Descargar CSV" }}
+            </a>
+          {% endif %}
+
+          {% if audio_download_url %}
+            <a class="download-btn" href="{{ audio_download_url }}" download="{{ audio_download_name }}">
+              {{ ui.download_audio if ui.download_audio is defined else "Descargar audio" }}
+            </a>
+          {% endif %}
+
+          {% if textgrid_download_url %}
+            <a class="download-btn" href="{{ textgrid_download_url }}" download="{{ textgrid_download_name }}">
+              {{ ui.download_textgrid }}
+            </a>
+          {% endif %}
+
+          {% if lemmas_download_url %}
+            <a class="download-btn" href="{{ lemmas_download_url }}" download="{{ lemmas_download_name }}">
+              {{ ui.download_lemmas_json }}
+            </a>
+          {% endif %}
+
+
+          <a class="back-link" href="/clinica?lang={{ lang }}">{{ ui.back_link }}</a>
+        </div>
+      </div>
+
+      <div class="banner">
+        <img src="/static/Banner.png" alt="AcousA banner">
+      </div>
+    </div>
+  </div>
+
+
+
+  {% if rows %}
+  <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+  <script>
+    const rows = {{ rows | tojson }};
+    const rowGroups = {{ row_groups | default([]) | tojson }};
+    const hoverValueLabel = {{ ui.plot_hover_value | tojson }};
+    const hoverScaleLabel = {{ ui.plot_hover_scale | tojson }};
+    const PASTEL_LILAC = [198, 178, 255];
+    const PASTEL_PINK  = [255, 190, 210];
+    const NORMAL_TINT  = [236, 225, 245];
+
+    function clamp(x, min, max) { return Math.max(min, Math.min(max, x)); }
+    function mixRgb(a, b, t) {
+      const u = clamp(t, 0, 1);
+      return [
+        Math.round(a[0] + (b[0] - a[0]) * u),
+        Math.round(a[1] + (b[1] - a[1]) * u),
+        Math.round(a[2] + (b[2] - a[2]) * u),
+      ];
+    }
+    function rgba(rgb, alpha) { return `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${alpha})`; }
+
+    function rowAccentRgb(r) {
+      const v = r.value_rel;
+      const a = r.normal_min_rel;
+      const b = r.normal_max_rel;
+
+      if (v == null || a == null || b == null) return [230, 225, 232];
+
+      const mid = (a + b) / 2;
+      const normalHalf = Math.max((b - a) / 2, 0.0001);
+
+      if (v >= a && v <= b) {
+        const sideBlend = v <= mid
+          ? mixRgb(NORMAL_TINT, PASTEL_LILAC, 0.45)
+          : mixRgb(NORMAL_TINT, PASTEL_PINK, 0.45);
+        const distFromCenter = Math.abs(v - mid) / normalHalf;
+        return mixRgb(NORMAL_TINT, sideBlend, 0.35 + distFromCenter * 0.45);
+      }
+
+      if (v < a) {
+        const dist = (a - v) / Math.max(a, 0.0001);
+        return mixRgb(NORMAL_TINT, PASTEL_LILAC, 0.65 + clamp(dist, 0, 1) * 0.35);
+      }
+
+      const dist = (v - b) / Math.max(1 - b, 0.0001);
+      return mixRgb(NORMAL_TINT, PASTEL_PINK, 0.65 + clamp(dist, 0, 1) * 0.35);
+    }
+
+    function isMobilePlot() {
+      return window.matchMedia("(max-width: 640px)").matches;
+    }
+
+    function wrapMobileLabel(label, maxChars = 24) {
+      if (!label) return "";
+      if (!isMobilePlot() || label.length <= maxChars) return label;
+
+      const words = String(label).split(" ");
+      const lines = [];
+      let current = "";
+
+      words.forEach(word => {
+        const candidate = current ? `${current} ${word}` : word;
+        if (candidate.length > maxChars && current) {
+          lines.push(current);
+          current = word;
+        } else {
+          current = candidate;
+        }
+      });
+
+      if (current) lines.push(current);
+      return lines.join("<br>");
+    }
+
+    function renderResultPlot(containerId, plotRows) {
+      const el = document.getElementById(containerId);
+      if (!el || !plotRows || plotRows.length === 0) return;
+
+      const mobile = isMobilePlot();
+
+      const rowStep = mobile ? 2 : 1;
+      const plotHeight = Math.max(
+        mobile ? 280 : 230,
+        plotRows.length * (mobile ? 92 : 58)
+      );
+
+      el.style.height = `${plotHeight}px`;
+
+      const y = plotRows.map((r, i) => (plotRows.length - i) * rowStep);
+
+      const rowBandColors = plotRows.map(r => rgba(rowAccentRgb(r), 0.88));
+      const rowPointColors = plotRows.map(r => rgba(rowAccentRgb(r), 1.0));
+
+      const bandTrace = {
+        type: "bar",
+        orientation: "h",
+        y: y,
+        x: plotRows.map(r => (r.normal_min_rel == null || r.normal_max_rel == null) ? 0 : (r.normal_max_rel - r.normal_min_rel)),
+        base: plotRows.map(r => r.normal_min_rel ?? 0),
+        marker: { color: rowBandColors, line: { width: 0 } },
+        hoverinfo: "skip",
+        showlegend: false
+      };
+
+      const pointTrace = {
+        type: "scatter",
+        mode: "markers",
+        x: plotRows.map(r => r.value_rel),
+        y: y,
+        marker: {
+          size: mobile ? 11 : 12,
+          color: rowPointColors,
+          line: { color: "rgba(255,255,255,0.95)", width: 1.8 }
+        },
+        customdata: plotRows.map(r => ({
+          label: r.label,
+          value: r.value,
+          unit: r.unit || "",
+          normal_min: r.normal_min,
+          normal_max: r.normal_max,
+          display_min: r.display_min,
+          display_max: r.display_max,
+          hover_msg: r.hover_msg || "",
+          help_text: r.help_text || ""
+        })),
+        hovertemplate:
+          "<b>%{customdata.label}</b>" +
+          `<br>${hoverValueLabel}: %{customdata.value} %{customdata.unit}` +
+          `<br>${hoverScaleLabel}: %{customdata.display_min}–%{customdata.display_max} %{customdata.unit}` +
+          "<br>%{customdata.hover_msg}<extra></extra>",
+        showlegend: false
+      };
+
+      const lineShapes = [];
+      const annotations = [];
+
+      plotRows.forEach((r, idx) => {
+        const yy = y[idx];
+
+        lineShapes.push({
+          type: "line",
+          x0: 0, x1: 1, y0: yy, y1: yy,
+          line: { color: "rgba(0,0,0,0.18)", width: 2 },
+          layer: "below"
+        });
+
+        if (mobile) {
+          annotations.push(
+            {
+              x: 0, y: yy + 0.58, xref: "paper", yref: "y",
+              text: `<b>${wrapMobileLabel(r.label)}</b>`,
+              showarrow: false,
+              xanchor: "left",
+              align: "left",
+              font: { size: 13, color: "#2f2f2f" }
+            },
+            {
+              x: 0, y: yy - 0.58, xref: "x", yref: "y",
+              text: `${r.display_min ?? ""} ${r.unit ?? ""}`,
+              showarrow: false,
+              xanchor: "left",
+              font: { size: 11, color: "#777" }
+            },
+            {
+              x: 1, y: yy - 0.58, xref: "x", yref: "y",
+              text: `${r.display_max ?? ""} ${r.unit ?? ""}`,
+              showarrow: false,
+              xanchor: "right",
+              font: { size: 11, color: "#777" }
+            }
+          );
+        } else {
+          annotations.push(
+            {
+              x: -0.02, y: yy, xref: "paper", yref: "y",
+              text: `<b>${r.label}</b>`,
+              showarrow: false,
+              xanchor: "right",
+              align: "right",
+              font: { size: 13, color: "#2f2f2f" }
+            },
+            {
+              x: 0, y: yy - 0.33, xref: "x", yref: "y",
+              text: `${r.display_min ?? ""} ${r.unit ?? ""}`,
+              showarrow: false,
+              xanchor: "left",
+              font: { size: 11, color: "#777" }
+            },
+            {
+              x: 1, y: yy - 0.33, xref: "x", yref: "y",
+              text: `${r.display_max ?? ""} ${r.unit ?? ""}`,
+              showarrow: false,
+              xanchor: "right",
+              font: { size: 11, color: "#777" }
+            }
+          );
+        }
+      });
+
+      const layout = {
+        margin: mobile
+          ? { t: 18, r: 12, b: 22, l: 12 }
+          : { t: 10, r: 30, b: 30, l: 330 },
+        height: plotHeight,
+        xaxis: {
+          range: [0, 1],
+          showgrid: false,
+          zeroline: false,
+          showticklabels: false,
+          fixedrange: true
+        },
+        yaxis: {
+          range: [
+            0.25,
+            plotRows.length * rowStep + (mobile ? 1.1 : 0.5)
+          ],
+          showgrid: false,
+          zeroline: false,
+          showticklabels: false,
+          fixedrange: true
+        },
+        shapes: lineShapes,
+        annotations: annotations,
+        plot_bgcolor: "#ffffff",
+        paper_bgcolor: "#ffffff",
+        bargap: mobile ? 0.82 : 0.72,
+        hoverlabel: {
+          bgcolor: "#fffaf7",
+          bordercolor: "rgba(0,0,0,.08)",
+          font: { color: "#2f2f2f" }
+        }
+      };
+
+      Plotly.newPlot(
+        containerId,
+        [bandTrace, pointTrace],
+        layout,
+        { responsive: true, displayModeBar: false }
+      ).then(() => {
+        Plotly.Plots.resize(el);
+      });
+    }
+
+    function renderAllResultPlots() {
+      if (rowGroups && rowGroups.length > 0) {
+        rowGroups.forEach((group, idx) => {
+          renderResultPlot(`plotly-results-group-${idx}`, group.rows || []);
+        });
+      } else {
+        renderResultPlot("plotly-results", rows);
+      }
+    }
+
+    renderAllResultPlots();
+
+    let resizeTimer = null;
+    window.addEventListener("resize", () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(renderAllResultPlots, 180);
+    });
+  </script>
+  {% endif %}
+</body>
+</html>

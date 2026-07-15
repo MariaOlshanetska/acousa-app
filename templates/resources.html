@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="{{ lang }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ ui.resources_title if ui.resources_title is defined else "Recursos" }}</title>
+  <link rel="stylesheet" href="/static/style.css">
+
+  <style>
+    :root{
+      --bg: #fff7f3;
+      --text: #2f2f2f;
+      --muted: #666;
+      --border: rgba(0,0,0,.06);
+      --shadow: 0 14px 30px rgba(0,0,0,.06);
+    }
+
+    *{ box-sizing:border-box; }
+
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        linear-gradient(90deg, #c9b6ff 0%, #ffd7b8 100%) no-repeat;
+      background-size: 100% 220px;
+      background-color: var(--bg);
+    }
+
+    .page{
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 1.5rem 1rem 3rem;
+      min-height: 100vh;
+    }
+
+    /* Contenedor blanco */
+    .shell{
+      background: rgba(255,255,255,.92);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      padding: 1.2rem;
+      backdrop-filter: blur(6px);
+    }
+
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: .8rem;
+    }
+
+    .back{
+      text-decoration:none;
+      color:#4b5563;
+      font-weight:650;
+    }
+
+    .title{
+      margin: .2rem 0 0 0;
+      font-size: 1.35rem;
+      font-weight: 750;
+    }
+
+    .intro{
+      margin: .35rem 0 0 0;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    /* Selector idioma (mismo rollo que clínica) */
+    .lang-switcher{
+      display:inline-flex;
+      align-items:center;
+      gap:.5rem;
+      font-size:.9rem;
+      padding:.35rem .8rem;
+      background: rgba(255, 255, 255, .75);
+      border-radius: 999px;
+      border: 1px solid var(--border);
+    }
+    .lang-switcher label{ font-weight:600; margin:0; color:#444; }
+    .lang-switcher select{
+      padding: .15rem .45rem;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--text);
+      font-size: .9rem;
+    }
+
+    /* Secciones */
+    .section{
+      margin-top: 1.2rem;
+    }
+
+    .section h2{
+      margin: 0 0 .8rem 0;
+      font-size: 1.05rem;
+      font-weight: 750;
+      color: #3a3a3a;
+    }
+
+    /* Grid pastel */
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    @media (max-width: 760px){
+      .grid{ grid-template-columns: 1fr; }
+      .topbar{ flex-direction: column; align-items: flex-start; }
+      .lang-pill { align-self: flex-end; }
+    }
+
+    /* Tarjeta pastel (clicable) */
+    .res-card{
+      --soft: #e9edff; /* fallback */
+      display:flex;
+      gap: .95rem;
+      align-items:flex-start;
+      text-decoration:none;
+      color: var(--text);
+      background: var(--soft);
+      border: 1px solid rgba(255,255,255,.9);
+      border-radius: 16px;
+      padding: 1.15rem 1.15rem;
+      box-shadow: 0 10px 22px rgba(0,0,0,.05);
+      transition: transform .12s ease, box-shadow .12s ease;
+      min-height: 92px;
+    }
+    .res-card:hover{
+      transform: translateY(-1px);
+      box-shadow: 0 16px 30px rgba(0,0,0,.07);
+    }
+
+    /* Colores pastel alternando (como tu screenshot) */
+    .res-card.c-blue  { --soft: #dde6ff; } /* azul */
+    .res-card.c-lilac { --soft: #ece6ff; } /* lila */
+    .res-card.c-pink  { --soft: #f7dce7; } /* rosa */
+
+    /* Icono simple (placeholder) */
+    .res-icon{
+      width: 46px;
+      height: 46px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.85);
+      border: 1px solid var(--border);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      flex: 0 0 46px;
+      font-size: 1.1rem;
+      line-height: 1;
+    }
+
+    .res-title{
+      margin: 0;
+      font-weight: 800;
+      font-size: 1.05rem;
+    }
+
+    .res-desc{
+      margin: .25rem 0 0 0;
+      color: rgba(40,40,40,.68);
+      font-size: .93rem;
+      line-height: 1.35;
+    }  
+    .res-icon img{
+      width: 28px;
+      height: 28px;
+      object-fit: contain;
+      display: block;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+    <div class="shell">
+
+      <div class="topbar">
+        <a class="back" href="/?lang={{ lang }}">⟵ {{ ui.back_home if ui.back_home is defined else "Volver" }}</a>
+
+        <form class="lang-pill" method="get" action="/recursos">
+          <span class="lang-pill__txt">LANG</span>
+
+          <span class="lang-pill__select">
+            <select name="lang" onchange="this.form.submit()" aria-label="Language">
+              <option value="ca" {% if lang == "ca" %}selected{% endif %}>CA</option>
+              <option value="es" {% if lang == "es" %}selected{% endif %}>ES</option>
+              <option value="en" {% if lang == "en" %}selected{% endif %}>EN</option>
+            </select>
+            <span class="lang-pill__chev" aria-hidden="true">▾</span>
+          </span>
+        </form>
+      </div>
+
+      <h1 class="title">{{ ui.resources_title if ui.resources_title is defined else "Recursos" }}</h1>
+      <p class="intro">
+        {{ ui.resources_intro if ui.resources_intro is defined else "Enlaces útiles para fonetistas y herramientas relacionadas." }}
+      </p>
+
+      {% for s in sections %}
+        <div class="section">
+          <h2>{{ s["title"] }}</h2>
+
+          <div class="grid">
+            {% set palette = ["c-blue", "c-lilac", "c-pink"] %}
+            {% for it in s["items"] %}
+              <a class="res-card {{ palette[loop.index0 % 3] }}" href="{{ it["url"] }}" target="_blank" rel="noopener">
+                <div class="res-icon">
+                  {% if it.get("icon") %}
+                    <img src="/static/{{ it["icon"] }}" alt="" loading="lazy">
+                  {% else %}
+                    ●
+                  {% endif %}
+                </div>
+                <div>
+                  <div class="res-title">{{ it["label"] }}</div>
+                  {% if it.get("desc") %}
+                    <div class="res-desc">{{ it["desc"] }}</div>
+                  {% endif %}
+                </div>
+              </a>
+            {% endfor %}
+          </div>
+        </div>
+      {% endfor %}
+
+      <div class="banner" style="margin-top:1.5rem;">
+        <img src="/static/Banner.png" alt="Banner">
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>

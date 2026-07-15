@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="{{ lang }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ consent.page_title }}</title>
+  <link rel="stylesheet" href="{{ request.url_for('static', path='style.css') }}?v=4">
+  <style>
+    :root{
+      --bg: #fff7f3;
+      --text: #2f2f2f;
+      --muted: #666;
+      --border: rgba(0,0,0,.06);
+      --shadow: 0 14px 30px rgba(0,0,0,.06);
+      --accent: #f69c7a;
+      --accent-soft: #fde0d2;
+      --accent-strong: #e56c47;
+      --card-soft: #fffaf8;
+    }
+
+    *{ box-sizing:border-box; }
+
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        linear-gradient(90deg, #c9b6ff 0%, #ffd7b8 100%) no-repeat;
+      background-size: 100% 220px;
+      background-color: var(--bg);
+    }
+
+    .page{
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 1.5rem 1rem 3rem;
+      min-height: 100vh;
+    }
+
+    .shell{
+      background: rgba(255,255,255,.94);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      padding: 1.25rem;
+      backdrop-filter: blur(6px);
+    }
+
+    .topbar{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:1rem;
+      margin-bottom:1rem;
+    }
+
+    h1{
+      margin:.2rem 0 .35rem 0;
+      font-size:1.45rem;
+      font-weight:780;
+      line-height:1.2;
+    }
+
+    .subtitle{
+      margin:0;
+      color:var(--muted);
+      line-height:1.45;
+    }
+
+    .back-link{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      white-space:nowrap;
+      padding:.55rem .9rem;
+      border-radius:999px;
+      background:#111;
+      color:#fff;
+      text-decoration:none;
+      font-weight:750;
+      font-size:.92rem;
+      box-shadow:0 10px 22px rgba(0,0,0,.08);
+    }
+
+    .intro-card,
+    .section-card,
+    .notice-card{
+      background: var(--card-soft);
+      border: 1px solid rgba(0,0,0,.05);
+      border-radius: 16px;
+      padding: 1.05rem 1.15rem;
+      box-shadow: 0 10px 22px rgba(0,0,0,.04);
+      margin-bottom: 1rem;
+    }
+
+    .intro-card p,
+    .section-card p,
+    .notice-card p{
+      margin:.35rem 0 .65rem 0;
+      color:var(--muted);
+      line-height:1.55;
+    }
+
+    .section-card h2{
+      margin:0 0 .55rem 0;
+      font-size:1.08rem;
+      font-weight:780;
+      color:#3a332f;
+    }
+
+    .notice-card{
+      border-color: rgba(229,108,71,.22);
+      background:#fff7f3;
+    }
+
+    .notice-card p{
+      margin:0;
+      color:#6a4a3d;
+      font-size:.95rem;
+    }
+
+    a{ color: var(--accent-strong); }
+
+    @media (max-width: 700px){
+      .topbar{ flex-direction:column; }
+      .back-link{ align-self:flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="shell">
+      <div class="topbar">
+        <div>
+          <h1>{{ consent.page_title }}</h1>
+          <p class="subtitle">{{ consent.app_title }}</p>
+        </div>
+        <a class="back-link" href="/clinica?lang={{ lang }}">⟵ {{ consent.back_label }}</a>
+      </div>
+
+      <section class="intro-card">
+        {% for paragraph in consent.intro %}
+          <p>{{ paragraph }}</p>
+        {% endfor %}
+      </section>
+
+      {% for section in consent.sections %}
+        <section class="section-card">
+          <h2>{{ section.title }}</h2>
+          {% for paragraph in section.paragraphs %}
+            <p>{{ paragraph }}</p>
+          {% endfor %}
+        </section>
+      {% endfor %}
+    </div>
+  </main>
+</body>
+</html>

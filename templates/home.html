@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="{{ lang }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ ui.home_title if ui.home_title is defined else "Parlab UB" }}</title>
+  <link rel="stylesheet" href="{{ request.url_for('static', path='style.css') }}?v=3">
+
+  <style>
+    :root{
+      --bg: #fff7f3;
+      --text: #2f2f2f;
+      --muted: #666;
+      --border: rgba(0,0,0,.06);
+      --shadow: 0 14px 30px rgba(0,0,0,.06);
+      --pill: #111111;
+      --pill-hover: #222222;
+    }
+
+    *{ box-sizing:border-box; }
+
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        linear-gradient(90deg, #c9b6ff 0%, #ffd7b8 100%) no-repeat;
+      background-size: 100% 220px;
+      background-color: var(--bg);
+    }
+
+    .page{
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 1.5rem 1rem 3rem;
+      min-height: 100vh;
+    }
+
+    .shell{
+      background: rgba(255,255,255,.92);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      padding: 1.2rem;
+      backdrop-filter: blur(6px);
+    }
+
+    .title{
+      margin: .2rem 0 0 0;
+      font-size: 1.5rem;
+      font-weight: 800;
+    }
+
+    .intro{
+      margin: .4rem 0 0 0;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .home-cards{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-top: 1.2rem;
+    }
+
+    .home-card{
+      background: #fffaf8;
+      border: 1px solid rgba(0,0,0,.05);
+      border-radius: 16px;
+      padding: 1.2rem;
+      box-shadow: 0 10px 22px rgba(0,0,0,.04);
+    }
+
+    .home-card h2{
+      margin:0 0 .45rem 0;
+      font-size:1.1rem;
+      font-weight:750;
+    }
+
+    .home-card p{
+      margin:0 0 1rem 0;
+      color: var(--muted);
+      line-height:1.45;
+    }
+
+    .home-btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:44px;
+      padding:.72rem 1.2rem;
+      border-radius:999px;
+      text-decoration:none;
+      background: var(--pill);
+      color:#fff;
+      font-weight:700;
+      box-shadow: 0 10px 22px rgba(0,0,0,.08);
+      transition: background .12s ease, transform .12s ease;
+    }
+
+    .home-btn:hover{
+      background: var(--pill-hover);
+      transform: translateY(-1px);
+    }
+
+    .banner{
+      margin-top:1.5rem;
+    }
+
+    .banner img{
+      max-width:100%;
+      border-radius:16px;
+      box-shadow: 0 14px 30px rgba(0,0,0,.06);
+      border: 1px solid rgba(0,0,0,.05);
+    }
+
+    .home-hero{
+      text-align: center;
+      margin-bottom: 1.5rem;
+      padding-top: .4rem;
+    }
+
+    .home-title{
+      margin: 0;
+      font-size: clamp(2rem, 4vw, 3.2rem);
+      line-height: 1.05;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: #2f2f2f;
+    }
+
+    .subtitle{
+      margin: .7rem auto 0 auto;
+      font-size: 1.05rem;
+      line-height: 1.5;
+      color: #666;
+      max-width: 720px;
+    }
+
+    .subtitle-link{
+      color: #2f2f2f;
+      font-weight: 700;
+      text-decoration: none;
+      border-bottom: 1px solid rgba(47,47,47,.25);
+      transition: opacity .15s ease, border-color .15s ease;
+    }
+
+    .subtitle-link:hover{
+      opacity: .8;
+      border-bottom-color: rgba(47,47,47,.55);
+    }
+
+    .home-hero{
+      text-align:center;
+      margin-bottom: 1rem;
+      padding-top: .2rem;
+    }
+
+    .home-logo{
+      display:block;
+      margin: 0 auto;
+      max-width: 340px;
+      width: min(70vw, 340px);
+      height: auto;
+      transform: translateY(-18px);
+    }
+
+    .home-subtitle{
+      margin: .85rem auto 0;
+      color:#666;
+      font-size: 1.02rem;
+      line-height: 1.45;
+    }
+
+    .subtitle-link{
+      color:#2f2f2f;
+      font-weight:700;
+      text-decoration:none;
+      border-bottom: 1px solid rgba(47,47,47,.25);
+    }
+
+    .subtitle-link:hover{
+      opacity:.8;
+      border-bottom-color: rgba(47,47,47,.55);
+    }
+
+    @media (max-width: 760px){
+      .home-cards{
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="home-wrap">
+      <div class="home-hero">
+        <img src="/static/LogoParlab.png" alt="ParLab UB" class="home-logo">
+        <p class="home-subtitle">
+          Una pàgina del
+          <a
+            href="https://www.ub.edu/phoneticslaboratory/ca/index.html"
+            target="_blank"
+            rel="noopener"
+            class="subtitle-link"
+          >
+            laboratori de fonètica de la UB
+          </a>
+        </p>
+      </div>
+
+      <div class="home-cards">
+        <div class="home-card">
+          <h2>{{ ui.home_clinica_title if ui.home_clinica_title is defined else "Clínica" }}</h2>
+          <p>{{ ui.home_clinica_desc if ui.home_clinica_desc is defined else "Accedeix a l’app d’anàlisi de veu." }}</p>
+          <a class="home-btn" href="/clinica?lang={{ lang }}">{{ ui.home_open_button if ui.home_open_button is defined else "Obrir" }}</a>
+        </div>
+
+        <div class="home-card">
+          <h2>{{ ui.home_recursos_title if ui.home_recursos_title is defined else "Recursos" }}</h2>
+          <p>{{ ui.home_recursos_desc if ui.home_recursos_desc is defined else "Enllaços per fonetistes i altres eines." }}</p>
+          <a class="home-btn" href="/recursos?lang={{ lang }}">{{ ui.home_open_button if ui.home_open_button is defined else "Obrir" }}</a>
+        </div>
+      </div>
+
+      <div class="banner">
+        <img src="/static/Banner.png" alt="Banner">
+      </div>
+    </div>
+  </div>
+</body>
+</html>

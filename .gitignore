@@ -1,0 +1,45 @@
+# Tablas de normas clínicas — datos, no código
+scripts/centres_sd_robustos_controls.xlsx
+scripts/habla_libre_norms_norms.csv
+scripts/lectura_norms_universal.csv
+
+# Datos de análisis y grabaciones — nunca al repositorio
+results/
+uploads/
+tmp_tfg_mails/
+
+# Entorno virtual Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+.Python
+
+# R
+.RData
+.Rhistory
+*.Rproj.user/
+
+# Archivos temporales y backups
+*.bak
+*.tmp
+*_backup.*
+/tmp/
+
+# Variables de entorno y secretos
+.env
+.env.*
+*.key
+*.pem
+
+# Editores e IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Kiro
+.kiro/
+
+# macOS
+.DS_Store

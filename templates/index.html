@@ -1,0 +1,2052 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ ui.page_title }}</title>
+  <link rel="stylesheet" href="{{ request.url_for('static', path='style.css') }}?v=4">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@500;600;700;800;850&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg: #fff7f3;
+      --text: #2f2f2f;
+      --muted: #666;
+      --border: rgba(0,0,0,.06);
+      --shadow: 0 14px 30px rgba(0,0,0,.06);
+      --pill: #111111;
+      --pill-hover: #222222;
+      --card-soft: #fffaf8;
+
+      --text-main: #2f2f2f;
+      --text-muted: #666;
+      --accent: #f69c7a;
+      --accent-soft: #fde0d2;
+      --accent-strong: #e56c47;
+      --border-soft: #f2bda0;
+    }
+
+    *{ box-sizing:border-box; }
+
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        linear-gradient(90deg, #c9b6ff 0%, #ffd7b8 100%) no-repeat;
+      background-size: 100% 220px;
+      background-color: var(--bg);
+    }
+
+    .page{
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 1.5rem 1rem 3rem;
+      min-height: 100vh;
+    }
+
+    .shell{
+      background: rgba(255,255,255,.92);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      padding: 1.2rem;
+      backdrop-filter: blur(6px);
+    }
+
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: .8rem;
+    }
+
+    .title{
+      margin: .2rem 0 0 0;
+      font-size: 1.35rem;
+      font-weight: 750;
+    }
+
+    .intro{
+      margin: .35rem 0 0 0;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    .lang-pill{
+      display:inline-flex;
+      align-items:center;
+      gap:.55rem;
+      padding:.38rem .8rem;
+      border-radius:999px;
+      background: #111111;
+      border: 1px solid #111111;
+      box-shadow: 0 10px 22px rgba(0,0,0,.08);
+    }
+
+    .lang-pill__txt{
+      font-size:.78rem;
+      font-weight:800;
+      letter-spacing:.08em;
+      color:#ffffff;
+    }
+
+    .lang-pill__select{
+      position:relative;
+      display:inline-flex;
+      align-items:center;
+    }
+
+    .lang-pill select{
+      appearance:none;
+      -webkit-appearance:none;
+      -moz-appearance:none;
+      border:1px solid var(--border);
+      background:#fff;
+      color:var(--text);
+      border-radius:999px;
+      padding:.28rem 1.8rem .28rem .7rem;
+      font-size:.9rem;
+      font-weight:600;
+      cursor:pointer;
+    }
+
+    .lang-pill__chev{
+      position:absolute;
+      right:.65rem;
+      pointer-events:none;
+      color:#666;
+      font-size:.8rem;
+    }
+
+    #audio-form{
+      margin-top: 1rem;
+    }
+
+    .section-card{
+      background: var(--card-soft);
+      border: 1px solid rgba(0,0,0,.05);
+      border-radius: 16px;
+      padding: 1.15rem 1.15rem;
+      box-shadow: 0 10px 22px rgba(0,0,0,.04);
+      margin-bottom: 1rem;
+    }
+
+    .section-subtitle{
+      font-size: .85rem;
+      font-weight: 800;
+      letter-spacing: .06em;
+      color: #777;
+      margin-bottom: .35rem;
+    }
+
+    h2{
+      margin: 0 0 .6rem 0;
+      font-size: 1.08rem;
+      font-weight: 750;
+    }
+
+    p{
+      margin-top: 0.25rem;
+      margin-bottom: 0.75rem;
+      color: var(--muted);
+    }
+
+    label{
+      font-weight: 650;
+    }
+
+    .field{
+      margin-bottom: 1rem;
+    }
+
+    input[type="number"],
+    input[type="text"],
+    select,
+    input[type="file"]{
+      font: inherit;
+      margin-top: 0.35rem;
+    }
+
+    input[type="number"],
+    input[type="text"] {
+      padding: 0.45rem 0.7rem;
+      border-radius: 0.6rem;
+      border: 1px solid var(--border);
+      background: #fff;
+    }
+
+    /* Upgrade visual de botones de tarea */
+    .task-grid {
+      gap: 1.05rem;
+    }
+
+    .task-card-btn {
+      position: relative;
+      overflow: hidden;
+
+      min-height: 145px;
+      padding: 1.3rem;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      border-radius: 1.25rem;
+      border: 1px solid rgba(255, 255, 255, 0.72);
+
+      text-align: center;
+      cursor: pointer;
+
+      background-color: #fffaf8;
+
+      box-shadow:
+        0 18px 34px rgba(94, 73, 61, 0.09),
+        0 4px 10px rgba(94, 73, 61, 0.05),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9);
+
+      transition:
+        transform 0.18s ease,
+        box-shadow 0.18s ease,
+        border-color 0.18s ease,
+        filter 0.18s ease;
+    }
+
+    .task-card-btn::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+
+      background-position: center;
+      background-repeat: no-repeat;
+      background-size: cover;
+
+      opacity: 0.24;
+      z-index: 0;
+    }
+
+    .task-card-btn::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+
+      background:
+        radial-gradient(circle at 50% 45%, rgba(255,255,255,0.16), transparent 45%),
+        linear-gradient(
+          180deg,
+          rgba(255,255,255,0.22) 0%,
+          rgba(255,255,255,0.52) 58%,
+          rgba(255,255,255,0.84) 100%
+        );
+
+      z-index: 0;
+    }
+
+    .task-card-label {
+      position: relative;
+      z-index: 1;
+
+      max-width: 78%;
+
+      font-family: "Nunito Sans", "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 1.16rem;
+      font-weight: 850;
+      line-height: 1.22;
+      letter-spacing: -0.015em;
+
+      color: #2f2f2f;
+    }
+
+    @media (max-width: 640px) {
+      .task-card-label {
+        font-size: 1.05rem;
+      }
+    }
+
+    .task-card-btn:hover {
+      transform: translateY(-2px);
+      filter: saturate(1.03);
+
+      box-shadow:
+        0 24px 42px rgba(94, 73, 61, 0.12),
+        0 7px 16px rgba(94, 73, 61, 0.07),
+        inset 0 1px 0 rgba(255, 255, 255, 0.95);
+    }
+
+    .task-card-btn.active {
+      transform: translateY(-1px);
+      border-color: rgba(229, 108, 71, 0.38);
+
+      box-shadow:
+        0 24px 46px rgba(229, 108, 71, 0.16),
+        0 7px 16px rgba(94, 73, 61, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.96);
+    }
+
+    .task-card-btn.active .task-card-label {
+      color: #272220;
+    }
+
+    .task-card-btn:focus-visible {
+      outline: 3px solid rgba(229, 108, 71, 0.25);
+      outline-offset: 3px;
+    }
+
+    /* 1. Articulación */
+    .task-card-btn[data-task-id="pataka"] {
+      background:
+        linear-gradient(135deg, #fff8f4 0%, #fdf1ff 100%);
+    }
+
+    .task-card-btn[data-task-id="pataka"]::before {
+      background-image:
+        repeating-linear-gradient(
+          75deg,
+          rgba(201,182,255,0.45) 0px,
+          rgba(201,182,255,0.45) 6px,
+          transparent 6px,
+          transparent 18px
+        );
+      opacity: 0.20;
+    }
+
+    /* 2. Calidad del habla */
+    .task-card-btn[data-task-id="asos"] {
+      background:
+        linear-gradient(135deg, #fff7f4 0%, #ffe8e2 100%);
+    }
+
+    .task-card-btn[data-task-id="asos"]::before {
+      background-image:
+        radial-gradient(circle at center,
+          rgba(246,156,122,0.35) 0%,
+          rgba(246,156,122,0.22) 18%,
+          rgba(246,156,122,0.10) 34%,
+          transparent 55%);
+      opacity: 0.9;
+    } 
+
+    /* 3. Lectura */
+    .task-card-btn[data-task-id="lectura"] {
+      background:
+        linear-gradient(135deg, #fffaf6 0%, #f4ecff 100%);
+    }
+
+    .task-card-btn[data-task-id="lectura"]::before {
+      background-image: url("/static/task-bg/lectura-scribble.svg");
+      opacity: 0.18;
+    }
+
+    /* 4. Habla libre */
+    .task-card-btn[data-task-id="habla_libre"] {
+      background:
+        linear-gradient(135deg, #f8fff9 0%, #fff3ea 100%);
+    }
+
+    .task-card-btn[data-task-id="habla_libre"]::before {
+      background-image:
+        radial-gradient(circle at 22% 35%, rgba(143,214,181,0.35) 0 10px, transparent 12px),
+        radial-gradient(circle at 58% 42%, rgba(255,215,184,0.35) 0 12px, transparent 14px),
+        radial-gradient(circle at 78% 70%, rgba(201,182,255,0.30) 0 8px, transparent 10px);
+      opacity: 0.9;
+    }
+
+    /* Caja de instrucciones más cuidada */
+    .task-instructions-inline {
+      margin-top: 1.05rem;
+      padding: 1.05rem 1.15rem 1.15rem;
+
+      border-radius: 1.1rem;
+      border: 1px solid rgba(242, 189, 160, 0.45);
+
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.96), rgba(255,250,248,0.92));
+
+      box-shadow:
+        0 14px 28px rgba(94, 73, 61, 0.06),
+        inset 0 1px 0 rgba(255,255,255,0.95);
+    }
+
+    .task-instructions-title {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+
+      margin-bottom: 0.45rem;
+
+      font-family: "Nunito Sans", "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 0.78rem;
+      font-weight: 850;
+      letter-spacing: 0.075em;
+      text-transform: uppercase;
+
+      color: #7a5c4b;
+    }
+
+    .task-instructions-title::before {
+      content: "✫";
+      font-size: 0.85rem;
+      color: #e56c47;
+    }
+
+    .task-instructions-text {
+      font-family: "Nunito Sans", "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 1rem;
+      line-height: 1.62;
+      font-weight: 500;
+
+      color: #5f5652;
+    }
+
+    @media (max-width: 640px) {
+      .task-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    #audio{
+      padding: .25rem 0;
+    }
+
+    .field-help{
+      font-size: .92rem;
+      color: var(--muted);
+      margin-top: .45rem;
+    }
+
+    .task-instructions-inline{
+      margin-top: .8rem;
+      padding: .85rem 1rem;
+      border-radius: 14px;
+      background: #ffffff;
+      border: 1px solid rgba(0,0,0,.06);
+    }
+
+    .task-instructions-title{
+      font-weight: 750;
+      margin-bottom: .35rem;
+    }
+
+    .task-instructions-text{
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .upload-option{
+      background: #fff;
+      border: 1px solid rgba(0,0,0,.06);
+      border-radius: 14px;
+      padding: .9rem 1rem;
+    }
+
+    .upload-option summary{
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .upload-help{
+      margin-top: .6rem;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      border: 0;
+    }
+
+    #record-btn,
+    #audio-form button[type="submit"]{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height: 44px;
+      padding: .72rem 1.25rem;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      background: var(--pill);
+      color: #fff;
+      font-weight: 700;
+      font-size: .96rem;
+      box-shadow: 0 10px 22px rgba(0,0,0,.08);
+      transition: background .12s ease, transform .12s ease;
+    }
+
+    #record-btn:hover,
+    #audio-form button[type="submit"]:hover{
+      background: var(--pill-hover);
+      transform: translateY(-1px);
+    }
+
+    #record-btn.recording{
+      background: #b42318;
+    }
+
+    #record-btn:disabled,
+    #audio-form button[type="submit"]:disabled{
+      background: #cfcfcf;
+      color: #fff;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .long-analysis-message {
+      margin-top: 0.85rem;
+      padding: 0.75rem 0.9rem;
+      border-radius: 0.85rem;
+      background: #fff7f3;
+      border: 1px solid var(--border-soft);
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      line-height: 1.35;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.04);
+    }
+
+    #recording-support-message,
+    #recording-status{
+      font-size: .92rem;
+    }
+
+    #recording-status{
+      color: #333;
+      font-weight: 600;
+    }
+
+    hr{
+      margin: 1.35rem 0;
+      border: none;
+      border-top: 1px dashed rgba(0,0,0,.10);
+    }
+
+    .alert{
+      margin-bottom: 1rem;
+      background: #fff1ee;
+      border: 1px solid rgba(180,35,24,.15);
+      color: #7a271a;
+      border-radius: 14px;
+      padding: .9rem 1rem;
+    }
+
+    .step-hidden{
+      display:none;
+    }
+
+    .banner{
+      margin-top:1.5rem;
+    }
+
+    .banner img{
+      max-width:100%;
+      border-radius:16px;
+      box-shadow: 0 14px 30px rgba(0,0,0,.06);
+      border: 1px solid rgba(0,0,0,.05);
+    }
+
+    .recording-progress-wrap{
+      display: none;
+      width: 100%;
+      margin-top: .85rem;
+      margin-bottom: 1rem;
+      padding: .9rem 0;
+    }
+
+    .recording-progress-wrap.is-visible{
+      display: block;
+    }
+
+    .recording-progress-label{
+      display: block;
+      margin-bottom: .55rem;
+      font-size: .92rem;
+      font-weight: 700;
+      color: #4a403d;
+    }
+
+    .recording-progress-track{
+      width: 100%;
+      height: 18px;
+      background: #f1e3db;
+      border-radius: 999px;
+      overflow: hidden;
+      box-shadow: inset -2px 2px 4px rgba(120, 93, 77, .16);
+    }
+
+    .recording-progress-fill{
+      width: 0%;
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #c9b6ff 0%, #ffd7b8 100%);
+      transition: width .12s linear, background .2s ease;
+    }
+
+    .recording-progress-fill.is-complete{
+      background: linear-gradient(90deg, #8fd6b5 0%, #55b987 100%);
+    }
+
+    .recording-progress-track {
+      position: relative;
+      overflow: visible;
+    }
+
+    .recording-progress-marker {
+      position: absolute;
+      top: -5px;
+      bottom: -5px;
+      width: 2px;
+      transform: translateX(-50%);
+      border-radius: 999px;
+      background: rgba(74, 64, 61, .55);
+      pointer-events: none;
+    }
+
+    .recording-progress-marker::after {
+      content: attr(data-label);
+      position: absolute;
+      top: 27px;
+      left: 50%;
+      transform: translateX(-50%);
+      white-space: nowrap;
+      font-size: .78rem;
+      font-weight: 800;
+      color: #5f5652;
+      background: rgba(255,255,255,.9);
+      border: 1px solid rgba(0,0,0,.06);
+      border-radius: 999px;
+      padding: .16rem .45rem;
+      box-shadow: 0 6px 14px rgba(0,0,0,.05);
+    }
+
+    .breath-cue-box{
+      margin-top: .8rem;
+      margin-bottom: 1rem;
+      padding: 1.2rem 1rem;
+      border-radius: 1.2rem;
+      background: linear-gradient(135deg, #fff7f0 0%, #ffe7d8 100%);
+      border: 2px solid rgba(229,108,71,.22);
+      box-shadow: 0 14px 28px rgba(229,108,71,.10);
+      text-align: center;
+    }
+
+    .breath-cue-text{
+      font-size: 2.4rem;
+      font-weight: 900;
+      line-height: 1.1;
+      color: #b94f2d;
+      letter-spacing: -.02em;
+    }
+
+    @media (max-width: 640px){
+      .breath-cue-text{
+        font-size: 1.6rem;
+      }
+    }
+
+    .recording-progress-marker.is-cut {
+      background: #b42318;
+    }
+
+    .recording-progress-marker.is-cut::after {
+      left: auto;
+      right: 0;
+      transform: none;
+      color: #7a271a;
+      border-color: rgba(180,35,24,.16);
+      background: #fff1ee;
+    }
+
+    .recording-progress-footer{
+      margin-top: .45rem;
+      display: flex;
+      align-items: center;
+      gap: .45rem;
+      flex-wrap: wrap;
+    }
+
+    .recording-timer{
+      font-size: .92rem;
+      color: #5f5a57;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .recording-progress-badge{
+      font-size: .85rem;
+      font-weight: 700;
+      color: #7a5c4b;
+    }
+
+    .recording-progress-badge.is-complete{
+      color: #18794e;
+    }
+
+    .reading-text-box{
+      margin-top: 1rem;
+      margin-bottom: 1.2rem;
+      background: linear-gradient(180deg, #fffdfb 0%, #fff7f3 100%);
+      border: 1px solid rgba(242, 189, 160, 0.65);
+      border-radius: 1rem;
+      padding: 1.1rem 1.15rem 1.2rem 1.15rem;
+      box-shadow: 0 10px 22px rgba(0,0,0,.04);
+    }
+
+    .reading-text-title{
+      font-size: .95rem;
+      font-weight: 800;
+      color: #7a5c4b;
+      margin-bottom: .65rem;
+      letter-spacing: .01em;
+    }
+
+    .reading-text-body{
+      font-size: 1.22rem;
+      line-height: 1.8;
+      color: var(--text);
+      font-weight: 500;
+      white-space: pre-wrap;
+    }
+
+    @media (max-width: 640px){
+      .reading-text-body{
+        font-size: 1.05rem;
+        line-height: 1.65;
+      }
+    }
+
+    @media (max-width: 760px){
+      .topbar{
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .lang-pill{
+        align-self: flex-end;
+      }
+    }
+
+    /* FIX FINAL: grid de botones */
+    .task-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1.05rem;
+      margin-top: 0.85rem;
+    }
+
+    .task-card-btn {
+      width: 100%;
+      min-width: 0;
+      min-height: 145px;
+    }
+
+    /* En móvil, una columna */
+    @media (max-width: 640px) {
+      .task-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* FIX FINAL: caja de instrucciones */
+    .task-instructions-inline {
+      margin-top: 1.05rem;
+      padding: 1.05rem 1.15rem 1.15rem;
+
+      border-radius: 1.1rem;
+      border: 1px solid rgba(242, 189, 160, 0.45);
+
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.96), rgba(255,250,248,0.92));
+
+      box-shadow:
+        0 14px 28px rgba(94, 73, 61, 0.06),
+        inset 0 1px 0 rgba(255,255,255,0.95);
+    }
+
+    .task-instructions-title {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+
+      margin-bottom: 0.45rem;
+
+      font-family: "Nunito Sans", "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 0.78rem;
+      font-weight: 850;
+      letter-spacing: 0.075em;
+      text-transform: uppercase;
+
+      color: #7a5c4b;
+    }
+
+    .task-instructions-title::before {
+      content: "✫";
+      font-size: 0.85rem;
+      color: #e56c47;
+    }
+
+    .task-instructions-text {
+      font-family: "Nunito Sans", "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 1rem;
+      line-height: 1.62;
+      font-weight: 500;
+      color: #5f5652;
+    }
+
+
+    .consent-more-link{
+      display:inline-block;
+      margin-left:.35rem;
+      color: #111111;
+      font-size:.92rem;
+      font-weight:400;
+      text-decoration:none;
+      border-bottom:1px solid rgba(229,108,71,.35);
+    }
+
+    .consent-more-link:hover{
+      color: #000000;
+      border-bottom-color: #000000;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="shell">
+
+      <div class="topbar">
+        <div>
+          <h1 class="title">{{ ui.app_title }}</h1>
+          <p class="intro">{{ ui.page_title }}</p>
+        </div>
+
+        <form class="lang-pill" method="get" action="/clinica">
+          <span class="lang-pill__txt">LANG</span>
+          <span class="lang-pill__select">
+            <select id="lang-select" name="lang" onchange="this.form.submit()" aria-label="Language">
+              <option value="ca" {% if lang == "ca" %}selected{% endif %}>CA</option>
+              <option value="es" {% if lang == "es" %}selected{% endif %}>ES</option>
+              <option value="en" {% if lang == "en" %}selected{% endif %}>EN</option>
+            </select>
+            <span class="lang-pill__chev" aria-hidden="true">▾</span>
+          </span>
+        </form>
+      </div>
+
+    <form id="audio-form" action="/clinica/analyze" method="post" enctype="multipart/form-data">
+      <!-- idioma actual -->
+      <input type="hidden" name="lang" value="{{ lang }}">
+      <input type="hidden" name="browser_metadata_json" id="browser-metadata-json" value="">
+
+      {% if error_message %}
+        <div class="alert" role="alert">{{ error_message }}</div>
+      {% endif %}
+
+      <!-- PAS 1: Datos previos -->
+      <div class="section-card">
+        <div class="section-subtitle">📋</div>
+        <h2>{{ ui.preinfo_title }}</h2>
+
+        <div class="field">
+          <label for="age">{{ ui.age_label }}</label><br>
+          <input
+            type="number"
+            id="age"
+            name="age"
+            min="0"
+            max="120"
+            required
+            placeholder="{{ ui.age_placeholder }}"
+          >
+          <p class="field-help">{{ ui.age_help }}</p>
+        </div>
+
+        <div class="field">
+          <label><strong>{{ ui.sex_label }}</strong></label><br>
+
+          <label>
+            <input type="radio" name="gender" value="home" required>
+            {{ ui.sex_male }}
+          </label><br>
+
+          <label>
+            <input type="radio" name="gender" value="dona">
+            {{ ui.sex_female }}
+          </label><br>
+
+          <label>
+            <input type="radio" name="gender" value="no_binari">
+            {{ ui.sex_nb }}
+          </label><br>
+
+          <label>
+            <input type="radio" name="gender" value="altres" id="gender-altres">
+            {{ ui.sex_other }}
+          </label>
+
+          <div id="gender-specify-wrapper" style="display:none; margin-top:0.6rem;">
+            <input
+              type="text"
+              name="gender_specify"
+              placeholder="{{ ui.sex_other_placeholder }}"
+              style="padding:0.35rem 0.6rem; border-radius:0.6rem; border:1px solid var(--border-soft);"
+            >
+          </div>
+
+          <p class="field-help">{{ ui.sex_help }}</p>
+        </div>
+      </div>
+
+      <!-- PAS 2: Consentimiento -->
+      <div class="section-card">
+        <div class="section-subtitle">✒️</div>
+        <h2>{{ ui.consent_label }}</h2>
+
+        <div class="field">
+          {% set consent_more_info = {"ca": "Més informació", "es": "Más información", "en": "More information"}.get(lang, "Más información") %}
+
+          <label>
+            <input type="radio" name="consent_science" value="yes" required>
+            {{ ui.consent_yes }}
+          </label>
+          <a
+            class="consent-more-link"
+            href="/clinica/consent?lang={{ lang }}&mode=science"
+            target="_blank"
+            rel="noopener"
+          >{{ consent_more_info }}</a><br>
+
+          <label>
+            <input type="radio" name="consent_science" value="no">
+            {{ ui.consent_no }}
+          </label>
+          <a
+            class="consent-more-link"
+            href="/clinica/consent?lang={{ lang }}&mode=self_monitoring"
+            target="_blank"
+            rel="noopener"
+          >{{ consent_more_info }}</a>
+
+          <p id="consent-info" class="field-help"></p>
+        </div>
+      </div>
+
+      <!-- PAS 3: Seleccionar tarea + audio (inicialmente oculto) -->
+      <div id="step-audio" class="section-card step-section step-hidden">
+        <div class="section-subtitle">🔬</div>
+
+        <!-- Selector de tarea -->
+        <h2>{{ ui.task_label }}</h2>
+
+        <div class="field">
+          <!-- Este input es el que se enviará al backend -->
+          <input type="hidden" id="task" name="task" value="{{ default_task }}">
+
+          <div class="task-grid" role="radiogroup" aria-label="{{ ui.task_label }}">
+            {% for t in tasks %}
+              <button
+                type="button"
+                class="task-card-btn {% if t.id == default_task %}active{% endif %}"
+                data-task-id="{{ t.id }}"
+                aria-pressed="{% if t.id == default_task %}true{% else %}false{% endif %}"
+              >
+                <span class="task-card-label">{{ t.label }}</span>
+              </button>
+            {% endfor %}
+          </div>
+
+          <div class="task-instructions-inline" id="task-instructions-box">
+            <div class="task-instructions-title">{{ ui.task_instructions_label }}</div>
+            <div class="task-instructions-text" id="task-instructions"></div>
+          </div>
+        </div>
+
+        <div id="reading-text-box" class="reading-text-box" hidden>
+          <div class="reading-text-title">
+            {{ ui.reading_reference_title if ui.reading_reference_title is defined else "Text de lectura" }}
+          </div>
+          <div class="reading-text-body" id="reading-text-body"></div>
+        </div>
+
+        <!-- Grabar en el navegador -->
+        <h2>{{ ui.record_title }}</h2>
+        <p id="recording-support-message"></p>
+
+        <button type="button" id="record-btn">⏺️</button>
+        <p id="recording-status"></p>
+
+        <div id="breath-cue-box" class="breath-cue-box" hidden>
+          <div id="breath-cue-text" class="breath-cue-text">{{ ui.msg_rec_breath_cue }}</div>
+        </div>
+
+        <div id="recording-progress-wrap" class="recording-progress-wrap">
+          <div id="recording-progress-label" class="recording-progress-label">
+            {{ ui.msg_rec_target }}
+          </div>
+
+          <div class="recording-progress-track" aria-hidden="true">
+            <div id="recording-progress-fill" class="recording-progress-fill"></div>
+
+            <span
+              id="recording-progress-min-marker"
+              class="recording-progress-marker"
+              style="left:66.666%;"
+              data-label="1:00 recomendado"
+              hidden
+            ></span>
+
+            <span
+              id="recording-progress-cut-marker"
+              class="recording-progress-marker is-cut"
+              style="left:100%;"
+              data-label="1:30 corte automático"
+              hidden
+            ></span>
+          </div>
+
+          <div class="recording-progress-footer">
+            <span id="recording-timer" class="recording-timer">0:00 / 0:15</span>
+            <span id="recording-progress-badge" class="recording-progress-badge">
+              {{ ui.msg_rec_badge_recording }}
+            </span>
+          </div>
+        </div>
+
+        <hr>
+
+        <!-- Subir archivo -->
+        <details class="upload-option">
+          <summary>{{ ui.upload_title }}</summary>
+          <p class="upload-help">{{ ui.upload_help }}</p>
+
+          <div class="field">
+            <label for="audio">{{ ui.upload_label }}</label><br>
+            <input type="file" id="audio" name="audio" accept="audio/*" required>
+          </div>
+        </details>
+        <hr>
+
+        <!-- PASO 3: botón Analizar -->
+        <button type="submit" id="submit-btn" disabled>{{ ui.submit_button }}</button>
+
+        <div id="long-analysis-message" class="long-analysis-message" aria-live="polite" hidden></div>
+      </div>
+    </form>
+
+    <!-- Banner fijo -->
+    <div class="banner">
+      <img src="/static/Banner.png" alt="AcousA banner">
+    </div>
+
+  </div>
+
+  <script>
+    // Instrucciones por tarea (inyectadas desde FastAPI)
+    const taskInstructions = {{ task_instructions_json | safe }};
+    const taskReferenceTexts = {{ task_reference_texts_json | default('{}') | safe }};
+
+    function updateTaskInstructions(taskId = null) {
+      const taskInput = document.getElementById("task");
+      const instrEl = document.getElementById("task-instructions");
+      const instrBox = document.getElementById("task-instructions-box");
+      const readingBox = document.getElementById("reading-text-box");
+      const readingBody = document.getElementById("reading-text-body");
+
+      const currentTask = taskId || taskInput.value;
+
+      // Guardamos la tarea seleccionada en el input hidden que se enviará al backend
+      taskInput.value = currentTask;
+
+      // Instrucciones
+      instrEl.textContent = taskInstructions[currentTask] || "";
+
+      if (instrBox) {
+        if (taskInstructions[currentTask]) {
+          instrBox.classList.remove("is-hidden");
+        } else {
+          instrBox.classList.add("is-hidden");
+        }
+      }
+
+      // Texto de referencia, si la tarea lo tiene
+      const refText = taskReferenceTexts[currentTask] || "";
+      if (refText.trim()) {
+        readingBody.textContent = refText;
+        readingBox.hidden = false;
+      } else {
+        readingBody.textContent = "";
+        readingBox.hidden = true;
+      }
+
+      // Marcar visualmente el botón activo
+      document.querySelectorAll(".task-card-btn").forEach(btn => {
+        const isActive = btn.dataset.taskId === currentTask;
+        btn.classList.toggle("active", isActive);
+        btn.setAttribute("aria-pressed", isActive ? "true" : "false");
+      });
+
+      if (!isRecording && typeof resetRecordingProgress === "function") {
+        resetRecordingProgress();
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const taskInput = document.getElementById("task");
+
+      updateTaskInstructions(taskInput.value);
+
+      document.querySelectorAll(".task-card-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          updateTaskInstructions(btn.dataset.taskId);
+        });
+      });
+    });
+    
+    // Textos desde el backend
+    const messages = {
+      unsupported: "{{ ui.msg_unsupported }}",
+      supported: "{{ ui.msg_supported }}",
+      recording: "{{ ui.msg_recording }}",
+      processing: "{{ ui.msg_processing }}",
+      ready: "{{ ui.msg_ready }}",
+      recTarget: "{{ ui.msg_rec_target }}",
+      recBreathCue: "{{ ui.msg_rec_breath_cue }}",
+      recSilenceAutoStopped: "{{ ui.msg_rec_silence_auto_stopped if ui.msg_rec_silence_auto_stopped is defined else ui.msg_processing }}",
+      recBadgeRecording: "{{ ui.msg_rec_badge_recording }}",
+      recBadgeComplete: "{{ ui.msg_rec_badge_complete }}",
+      recBadgeFinished: "{{ ui.msg_rec_badge_finished }}",
+      recError: "{{ ui.msg_rec_error }}",
+      recInvalid: "{{ ui.msg_rec_invalid }}",
+      hablaLibreSlow: "{{ ui.msg_habla_libre_slow }}"
+    };
+
+    let mediaRecorder = null;
+    let recordedChunks = [];
+    let stream = null;
+    let isRecording = false;
+
+    const recordBtn = document.getElementById("record-btn");
+    const statusEl = document.getElementById("recording-status");
+    const supportEl = document.getElementById("recording-support-message");
+    const fileInput = document.getElementById("audio");
+    const submitBtn = document.getElementById("submit-btn");
+
+    const audioForm = document.getElementById("audio-form");
+    const taskSelect = document.getElementById("task");
+    const longAnalysisMessageEl = document.getElementById("long-analysis-message");
+
+    const progressWrap = document.getElementById("recording-progress-wrap");
+    const breathCueBox = document.getElementById("breath-cue-box");
+    const breathCueText = document.getElementById("breath-cue-text");
+    const progressLabel = document.getElementById("recording-progress-label");
+    const progressFill = document.getElementById("recording-progress-fill");
+    const progressTimer = document.getElementById("recording-timer");
+    const progressBadge = document.getElementById("recording-progress-badge");
+    const progressMinMarker = document.getElementById("recording-progress-min-marker");
+    const progressCutMarker = document.getElementById("recording-progress-cut-marker");
+
+    const TASK_FREE_SPEECH_ID = "habla_libre";
+    const TASK_READING_ID = "lectura";
+
+    const TASK_BREATH_CUE_IDS = new Set(["pataka", "asos"]);
+    const BREATH_CUE_SECONDS = 1;
+
+    const TASK_AUTO_SILENCE_IDS = new Set(["pataka", "asos"]);
+    const SILENCE_AFTER_SOUND_SECONDS = 2;
+
+    // Umbrales RMS aproximados. Si se para demasiado pronto/tarde, ajustamos estos dos.
+    const RMS_VOICE_THRESHOLD = 0.025;
+    const RMS_SILENCE_THRESHOLD = 0.012;
+
+    const DEFAULT_SUFFICIENT_SECONDS = 10;
+    const DEFAULT_PROGRESS_SECONDS = 15;
+
+    const FREE_SPEECH_SUFFICIENT_SECONDS = 60;
+    const FREE_SPEECH_PROGRESS_SECONDS = 90;
+
+    const READING_SUFFICIENT_SECONDS = 120;
+    const READING_PROGRESS_SECONDS = 120;
+
+    const freeSpeechProgressText = {
+      ca: {
+        target: "Intenta parlar almenys fins a 1 minut. La gravació es tallarà automàticament a 1:30.",
+        recording: "Continua parlant fins a arribar al minut recomanat.",
+        complete: "Has arribat al minut recomanat. Pots continuar; es tallarà automàticament a 1:30.",
+        autoStopped: "Gravació aturada automàticament en arribar a 1:30.",
+        minMark: "1:00 recomanat",
+        cutMark: "1:30 tall automàtic"
+      },
+      es: {
+        target: "Intenta hablar al menos hasta 1 minuto. La grabación se cortará automáticamente a 1:30.",
+        recording: "Sigue hablando hasta llegar al minuto recomendado.",
+        complete: "Has llegado al minuto recomendado. Puedes continuar; se cortará automáticamente a 1:30.",
+        autoStopped: "Grabación detenida automáticamente al llegar a 1:30.",
+        minMark: "1:00 recomendado",
+        cutMark: "1:30 corte automático"
+      },
+      en: {
+        target: "Try to speak for at least 1 minute. Recording will stop automatically at 1:30.",
+        recording: "Keep speaking until you reach the recommended 1 minute.",
+        complete: "You have reached the recommended minute. You may continue; recording will stop automatically at 1:30.",
+        autoStopped: "Recording stopped automatically at 1:30.",
+        minMark: "1:00 recommended",
+        cutMark: "1:30 automatic stop"
+      }
+    };
+
+    const readingProgressText = {
+      ca: {
+        target: "Llegeix el text amb calma. La gravació es tallarà automàticament a 2:00.",
+        recording: "Continua llegint. La gravació es tallarà automàticament a 2:00.",
+        complete: "Has arribat al límit de 2:00.",
+        autoStopped: "Gravació aturada automàticament en arribar a 2:00.",
+        cutMark: "2:00 tall automàtic"
+      },
+      es: {
+        target: "Lee el texto con calma. La grabación se cortará automáticamente a 2:00.",
+        recording: "Continúa leyendo. La grabación se cortará automáticamente a 2:00.",
+        complete: "Has llegado al límite de 2:00.",
+        autoStopped: "Grabación detenida automáticamente al llegar a 2:00.",
+        cutMark: "2:00 corte automático"
+      },
+      en: {
+        target: "Read the text calmly. Recording will stop automatically at 2:00.",
+        recording: "Keep reading. Recording will stop automatically at 2:00.",
+        complete: "You have reached the 2:00 limit.",
+        autoStopped: "Recording stopped automatically at 2:00.",
+        cutMark: "2:00 automatic stop"
+      }
+    };
+
+    let recordingStartTime = null;
+    let recordingTimerInterval = null;
+    let recordingTaskId = null;
+    let recordingWasAutoStopped = false;
+    let recordingAutoStopReason = "manual";
+    let recordingShouldAutoSubmit = false;
+
+    let audioContext = null;
+    let analyserNode = null;
+    let micSourceNode = null;
+    let silenceDetectionFrameId = null;
+    let silenceHasDetectedSound = false;
+    let silenceStartedAt = null;
+    const ageInput = document.getElementById("age");
+    const consentInfoEl = document.getElementById("consent-info");
+    const consentRadios = document.querySelectorAll('input[name="consent_science"]');
+    const stepAudio = document.getElementById("step-audio");
+
+    const consentInfoYes = "{{ ui.consent_info_yes }}";
+    const consentInfoNo = "{{ ui.consent_info_no }}";
+
+    function detectDeviceAndBrowser() {
+      const ua = (navigator.userAgent || "").toLowerCase();
+      const uaData = navigator.userAgentData || null;
+
+      let deviceFamily = "device";
+      let browserFamily = "browser";
+
+      if (/iphone/.test(ua)) deviceFamily = "iphone";
+      else if (/ipad/.test(ua)) deviceFamily = "ipad";
+      else if (/android/.test(ua)) deviceFamily = "android";
+      else if (/windows/.test(ua)) deviceFamily = "windows";
+      else if (/macintosh|mac os x/.test(ua)) deviceFamily = "mac";
+      else if (/linux/.test(ua)) deviceFamily = "linux";
+
+      if (/edg\//.test(ua)) browserFamily = "edge";
+      else if (/firefox\//.test(ua)) browserFamily = "firefox";
+      else if (/chrome\//.test(ua) || /crios\//.test(ua)) browserFamily = "chrome";
+      else if (/safari\//.test(ua)) browserFamily = "safari";
+
+      if (uaData && Array.isArray(uaData.brands)) {
+        const brands = uaData.brands.map(b => (b.brand || "").toLowerCase());
+        if (brands.some(b => b.includes("edge"))) browserFamily = "edge";
+        else if (brands.some(b => b.includes("firefox"))) browserFamily = "firefox";
+        else if (brands.some(b => b.includes("chrome") || b.includes("chromium"))) browserFamily = "chrome";
+      }
+
+      if (uaData && typeof uaData.platform === "string") {
+        const p = uaData.platform.toLowerCase();
+        if (p.includes("android")) deviceFamily = "android";
+        else if (p.includes("ios")) {
+          if (/ipad/.test(ua)) deviceFamily = "ipad";
+          else if (/iphone/.test(ua)) deviceFamily = "iphone";
+        }
+        else if (p.includes("windows")) deviceFamily = "windows";
+        else if (p.includes("mac")) deviceFamily = /ipad/.test(ua) ? "ipad" : "mac";
+        else if (p.includes("linux")) deviceFamily = "linux";
+      }
+
+      return {
+        device_family: deviceFamily,
+        browser_family: browserFamily,
+        user_agent: navigator.userAgent || ""
+      };
+    }
+
+
+
+    // --- GENDER/SEX robusto: soporta name="gender" o name="sex"
+    const GENDER_FIELD_NAME = document.querySelector('input[name="gender"]')
+      ? "gender"
+      : (document.querySelector('input[name="sex"]') ? "sex" : "gender");
+
+    const genderRadios = document.querySelectorAll(`input[name="${GENDER_FIELD_NAME}"]`);
+    const genderSpecifyWrapper = document.getElementById("gender-specify-wrapper");
+    const genderSpecifyInput = document.querySelector('input[name="gender_specify"]');
+    // -----------------------------
+    // Persistencia de formulario al cambiar idioma (FIXED)
+    // -----------------------------
+    const STATE_KEY = "acousa_form_state_v2";
+
+    function saveFormState() {
+      const taskEl = document.getElementById("task");
+      const state = {
+        age: ageInput?.value || "",
+        consent_science: getConsentValue() || "",
+        gender: getGenderValue() || "",                 // <-- uses your radio group
+        gender_specify: genderSpecifyInput?.value || "",
+        task: taskEl?.value || "",
+      };
+      sessionStorage.setItem(STATE_KEY, JSON.stringify(state));
+    }
+
+    function restoreFormState() {
+      const raw = sessionStorage.getItem(STATE_KEY);
+      if (!raw) return;
+
+      let state = null;
+      try { state = JSON.parse(raw); } catch { return; }
+      if (!state) return;
+
+      // Age
+      if (state.age && ageInput) ageInput.value = state.age;
+
+      // Consent
+      if (state.consent_science) {
+        const r = document.querySelector(
+          `input[name="consent_science"][value="${state.consent_science}"]`
+        );
+        if (r) r.checked = true;
+      }
+
+      // Gender (radio)
+      if (state.gender) {
+        const r = document.querySelector(
+          `input[name="${GENDER_FIELD_NAME}"][value="${state.gender}"]`
+        );
+        if (r) r.checked = true;
+      }
+
+      // Gender specify
+      if (genderSpecifyInput && typeof state.gender_specify === "string") {
+        genderSpecifyInput.value = state.gender_specify;
+      }
+
+      // Update visibility for "altres"
+      updateGenderSpecifyVisibility();
+
+      // Task
+      const taskEl = document.getElementById("task");
+      if (taskEl && state.task) {
+        taskEl.value = state.task;
+        if (typeof updateTaskInstructions === "function") updateTaskInstructions();
+      }
+
+      // Recompute step visibility + buttons
+      updateConsentAndAgeStatus();
+      updateSubmitState();
+    }
+
+    // Restore on load
+    document.addEventListener("DOMContentLoaded", restoreFormState);
+
+    // Save on changes
+    ageInput?.addEventListener("input", saveFormState);
+    consentRadios.forEach(r => r.addEventListener("change", saveFormState));
+    genderRadios.forEach(r => r.addEventListener("change", saveFormState));
+    genderSpecifyInput?.addEventListener("input", saveFormState);
+
+    // Save before language submit
+    const langSelect = document.getElementById("lang-select");
+    if (langSelect) {
+      langSelect.addEventListener("change", () => {
+        saveFormState();
+        langSelect.form.submit();
+      });
+    }
+
+    // Optional: save on submit
+    document.getElementById("audio-form")?.addEventListener("submit", () => {
+      const formEl = document.getElementById("audio-form");
+      let metaInput = document.getElementById("browser-metadata-json");
+      if (!metaInput && formEl) {
+        metaInput = document.createElement("input");
+        metaInput.type = "hidden";
+        metaInput.name = "browser_metadata_json";
+        metaInput.id = "browser-metadata-json";
+        formEl.appendChild(metaInput);
+      }
+      if (metaInput) {
+        metaInput.value = JSON.stringify(detectDeviceAndBrowser());
+      }
+      saveFormState();
+    });
+
+
+    function getConsentValue() {
+      let consentValue = null;
+      consentRadios.forEach(r => {
+        if (r.checked) consentValue = r.value;
+      });
+      return consentValue;
+    }
+
+    function ageIsOk() {
+      return ageInput.value && parseInt(ageInput.value) > 0;
+    }
+
+    function updateSubmitState() {
+      const hasFile = fileInput && fileInput.files && fileInput.files.length > 0;
+      const consentOk = getConsentValue() !== null;   // 👈 importante
+      const readyForAudio = ageIsOk() && genderIsOk() && consentOk;
+
+      submitBtn.disabled = !(readyForAudio && hasFile);
+    }
+
+    fileInput?.addEventListener("change", updateSubmitState);
+    fileInput?.addEventListener("input", updateSubmitState);
+
+    function updateConsentAndAgeStatus() {
+      const consentValue = getConsentValue();
+
+      if (consentValue === "yes") {
+        consentInfoEl.textContent = consentInfoYes;
+      } else if (consentValue === "no") {
+        consentInfoEl.textContent = consentInfoNo;
+      } else {
+        consentInfoEl.textContent = "";
+      }
+
+      const readyForAudio = ageIsOk() && genderIsOk() && consentValue;
+
+      if (readyForAudio) {
+        stepAudio.classList.remove("step-hidden");
+      } else {
+        stepAudio.classList.add("step-hidden");
+        recordBtn.disabled = true;
+        statusEl.textContent = "";
+        resetRecordingProgress();
+        stopRecordingProgress();
+      }
+
+      recordBtn.disabled = !readyForAudio;
+      updateSubmitState();
+    }
+
+    ageInput.addEventListener("input", updateConsentAndAgeStatus);
+    consentRadios.forEach(r => r.addEventListener("change", updateConsentAndAgeStatus));
+
+
+    function getGenderValue() {
+      let v = null;
+      genderRadios.forEach(r => { if (r.checked) v = r.value; });
+      return v;
+    }
+
+    function updateGenderSpecifyVisibility() {
+      const v = getGenderValue();
+      const isOther = (v === "altres" || v === "otros" || v === "other");
+      if (genderSpecifyWrapper) genderSpecifyWrapper.style.display = isOther ? "block" : "none";
+      if (!isOther && genderSpecifyInput) genderSpecifyInput.value = "";
+    }
+
+    function genderIsOk() {
+      const v = getGenderValue();
+      if (!v) return false;
+      const isOther = (v === "altres" || v === "otros" || v === "other");
+      if (isOther) return genderSpecifyInput && genderSpecifyInput.value.trim().length > 0;
+      return true;
+    }
+
+    // Listeners
+    genderRadios.forEach(r => r.addEventListener("change", () => {
+      updateGenderSpecifyVisibility();
+      updateConsentAndAgeStatus();
+    }));
+
+    genderSpecifyInput?.addEventListener("input", () => {
+      updateConsentAndAgeStatus();
+    });
+
+    // Estado inicial
+    stepAudio.classList.add("step-hidden");
+    updateGenderSpecifyVisibility();
+    updateConsentAndAgeStatus();
+    recordBtn.disabled = true;
+    submitBtn.disabled = true;
+    resetRecordingProgress();
+    updateSubmitState();
+
+
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      supportEl.textContent = messages.unsupported;
+      recordBtn.disabled = true;
+    } else {
+      supportEl.textContent = messages.supported;
+    }
+
+    function isFreeSpeechTask(taskId = null) {
+      const currentTask = taskId || recordingTaskId || taskSelect.value;
+      return currentTask === TASK_FREE_SPEECH_ID;
+    }
+
+    function isReadingTask(taskId = null) {
+      const currentTask = taskId || recordingTaskId || taskSelect.value;
+      return currentTask === TASK_READING_ID;
+    }
+
+    function isBreathCueTask(taskId = null) {
+      const currentTask = taskId || recordingTaskId || taskSelect.value;
+      return TASK_BREATH_CUE_IDS.has(currentTask);
+    }
+
+    function isAutoSilenceTask(taskId = null) {
+      const currentTask = taskId || recordingTaskId || taskSelect.value;
+      return TASK_AUTO_SILENCE_IDS.has(currentTask);
+    }
+
+    function isAutoAnalyzeTask(taskId = null) {
+      return isAutoSilenceTask(taskId);
+    }
+
+    function isAutoStopTask(taskId = null) {
+      return isFreeSpeechTask(taskId) || isReadingTask(taskId);
+    }
+
+    function getRecordingLimits(taskId = null) {
+      if (isFreeSpeechTask(taskId)) {
+        return {
+          sufficientSeconds: FREE_SPEECH_SUFFICIENT_SECONDS,
+          progressSeconds: FREE_SPEECH_PROGRESS_SECONDS,
+          breathSeconds: 0
+        };
+      }
+
+      if (isReadingTask(taskId)) {
+        return {
+          sufficientSeconds: READING_SUFFICIENT_SECONDS,
+          progressSeconds: READING_PROGRESS_SECONDS,
+          breathSeconds: 0
+        };
+      }
+
+      const breathSeconds = isBreathCueTask(taskId) ? BREATH_CUE_SECONDS : 0;
+
+      return {
+        sufficientSeconds: DEFAULT_SUFFICIENT_SECONDS + breathSeconds,
+        progressSeconds: DEFAULT_PROGRESS_SECONDS + breathSeconds,
+        breathSeconds: breathSeconds
+      };
+    }
+
+    function formatRecordingTime(totalSeconds) {
+      const safeSeconds = Math.max(0, Math.floor(totalSeconds));
+      const minutes = Math.floor(safeSeconds / 60);
+      const seconds = safeSeconds % 60;
+      return `${minutes}:${String(seconds).padStart(2, "0")}`;
+    }
+
+    function getFreeSpeechProgressText(key) {
+      const currentLang = "{{ lang }}";
+      const texts = freeSpeechProgressText[currentLang] || freeSpeechProgressText.es;
+      return texts[key] || freeSpeechProgressText.es[key] || "";
+    }
+
+    function getReadingProgressText(key) {
+      const currentLang = "{{ lang }}";
+      const texts = readingProgressText[currentLang] || readingProgressText.es;
+      return texts[key] || readingProgressText.es[key] || "";
+    }
+
+    function getAutoStoppedText(taskId = null, reason = "time") {
+      if (reason === "silence") {
+        return messages.recSilenceAutoStopped;
+      }
+
+      if (isFreeSpeechTask(taskId)) {
+        return getFreeSpeechProgressText("autoStopped");
+      }
+
+      if (isReadingTask(taskId)) {
+        return getReadingProgressText("autoStopped");
+      }
+
+      return messages.processing;
+    }
+
+    function showBreathCue() {
+      if (breathCueText) breathCueText.textContent = messages.recBreathCue;
+      if (breathCueBox) breathCueBox.hidden = false;
+    }
+
+    function hideBreathCue() {
+      if (breathCueBox) breathCueBox.hidden = true;
+    }
+
+    function stopSilenceDetection() {
+      if (silenceDetectionFrameId) {
+        cancelAnimationFrame(silenceDetectionFrameId);
+        silenceDetectionFrameId = null;
+      }
+
+      try {
+        if (micSourceNode) micSourceNode.disconnect();
+      } catch (e) {}
+
+      try {
+        if (analyserNode) analyserNode.disconnect();
+      } catch (e) {}
+
+      micSourceNode = null;
+      analyserNode = null;
+      silenceHasDetectedSound = false;
+      silenceStartedAt = null;
+
+      if (audioContext) {
+        const ctx = audioContext;
+        audioContext = null;
+        try {
+          if (ctx.state !== "closed") ctx.close();
+        } catch (e) {}
+      }
+    }
+
+    function startSilenceDetection(inputStream, taskId) {
+      stopSilenceDetection();
+
+      if (!isAutoSilenceTask(taskId)) return;
+
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextClass || !inputStream) return;
+
+      try {
+        audioContext = new AudioContextClass();
+        analyserNode = audioContext.createAnalyser();
+        analyserNode.fftSize = 2048;
+        analyserNode.smoothingTimeConstant = 0.2;
+
+        micSourceNode = audioContext.createMediaStreamSource(inputStream);
+        micSourceNode.connect(analyserNode);
+
+        const buffer = new Uint8Array(analyserNode.fftSize);
+        const detectionStart = performance.now();
+
+        const tick = () => {
+          if (!isRecording || !analyserNode || !recordingTaskId) return;
+
+          analyserNode.getByteTimeDomainData(buffer);
+
+          let sumSquares = 0;
+          for (let i = 0; i < buffer.length; i++) {
+            const centered = (buffer[i] - 128) / 128;
+            sumSquares += centered * centered;
+          }
+
+          const rms = Math.sqrt(sumSquares / buffer.length);
+          const now = performance.now();
+          const elapsedSec = (now - detectionStart) / 1000;
+
+          // No detectem silenci durant el segon inicial d’“Agafa aire”.
+          if (elapsedSec < BREATH_CUE_SECONDS + 0.15) {
+            silenceDetectionFrameId = requestAnimationFrame(tick);
+            return;
+          }
+
+          // Primer ha d'haver-hi veu/soroll clar. Després, 2 s de silenci.
+          if (rms >= RMS_VOICE_THRESHOLD) {
+            silenceHasDetectedSound = true;
+            silenceStartedAt = null;
+          } else if (silenceHasDetectedSound && rms <= RMS_SILENCE_THRESHOLD) {
+            if (silenceStartedAt === null) {
+              silenceStartedAt = now;
+            } else if ((now - silenceStartedAt) / 1000 >= SILENCE_AFTER_SOUND_SECONDS) {
+              stopCurrentRecording(true, "silence");
+              return;
+            }
+          } else if (silenceHasDetectedSound) {
+            silenceStartedAt = null;
+          }
+
+          silenceDetectionFrameId = requestAnimationFrame(tick);
+        };
+
+        if (audioContext.state === "suspended") {
+          audioContext.resume().catch(() => {});
+        }
+
+        silenceDetectionFrameId = requestAnimationFrame(tick);
+      } catch (e) {
+        console.warn("Silence detection could not be started:", e);
+        stopSilenceDetection();
+      }
+    }
+
+    function resetRecordingProgress() {
+      const limits = getRecordingLimits(taskSelect.value);
+
+      hideBreathCue();
+      progressWrap.classList.remove("is-visible");
+      progressFill.style.width = "0%";
+      progressFill.classList.remove("is-complete");
+      progressTimer.textContent = `0:00 / ${formatRecordingTime(limits.progressSeconds)}`;
+      progressBadge.classList.remove("is-complete");
+
+      recordingStartTime = null;
+      recordingTaskId = null;
+      recordingWasAutoStopped = false;
+
+      if (isFreeSpeechTask(taskSelect.value)) {
+        progressLabel.textContent = getFreeSpeechProgressText("target");
+        progressBadge.textContent = getFreeSpeechProgressText("recording");
+
+        progressMinMarker.hidden = false;
+        progressCutMarker.hidden = false;
+
+        progressMinMarker.style.left = `${(FREE_SPEECH_SUFFICIENT_SECONDS / FREE_SPEECH_PROGRESS_SECONDS) * 100}%`;
+        progressMinMarker.dataset.label = getFreeSpeechProgressText("minMark");
+
+        progressCutMarker.style.left = "100%";
+        progressCutMarker.dataset.label = getFreeSpeechProgressText("cutMark");
+
+      } else if (isReadingTask(taskSelect.value)) {
+        progressLabel.textContent = getReadingProgressText("target");
+        progressBadge.textContent = getReadingProgressText("recording");
+
+        progressMinMarker.hidden = true;
+        progressCutMarker.hidden = false;
+
+        progressCutMarker.style.left = "100%";
+        progressCutMarker.dataset.label = getReadingProgressText("cutMark");
+
+      } else {
+        progressLabel.textContent = messages.recTarget;
+        progressBadge.textContent = messages.recBadgeRecording;
+
+        progressMinMarker.hidden = true;
+        progressCutMarker.hidden = true;
+        progressMinMarker.classList.remove("is-breath");
+        progressMinMarker.dataset.label = "";
+      }
+    }
+    function renderRecordingProgress(elapsedSec) {
+      const taskId = recordingTaskId || taskSelect.value;
+      const limits = getRecordingLimits(taskId);
+
+      const shownSec = Math.max(0, elapsedSec);
+      const progressPct = Math.min((shownSec / limits.progressSeconds) * 100, 100);
+
+      if (limits.breathSeconds && shownSec < limits.breathSeconds) {
+        hideBreathCue();
+        showBreathCue();
+        progressWrap.classList.remove("is-visible");
+
+        if (isRecording) {
+          statusEl.textContent = "";
+        }
+
+        return;
+      }
+
+      hideBreathCue();
+      progressWrap.classList.add("is-visible");
+      progressFill.style.width = `${progressPct}%`;
+      progressTimer.textContent = `${formatRecordingTime(shownSec)} / ${formatRecordingTime(limits.progressSeconds)}`;
+
+      if (limits.breathSeconds && isRecording && !breathCueBox.hidden) {
+        hideBreathCue();
+      }
+
+      if (limits.breathSeconds && isRecording && statusEl.textContent !== messages.recording) {
+        statusEl.textContent = messages.recording;
+      }
+
+      if (shownSec >= limits.sufficientSeconds) {
+        progressFill.classList.add("is-complete");
+        progressBadge.classList.add("is-complete");
+
+        progressBadge.textContent = isFreeSpeechTask(taskId)
+          ? getFreeSpeechProgressText("complete")
+          : isReadingTask(taskId)
+          ? getReadingProgressText("complete")
+          : messages.recBadgeComplete;
+      } else {
+        progressFill.classList.remove("is-complete");
+        progressBadge.classList.remove("is-complete");
+
+        progressBadge.textContent = isFreeSpeechTask(taskId)
+          ? getFreeSpeechProgressText("recording")
+          : isReadingTask(taskId)
+          ? getReadingProgressText("recording")
+          : messages.recBadgeRecording;
+      }
+    }
+
+    function startRecordingProgress() {
+      recordingTaskId = taskSelect.value;
+      recordingWasAutoStopped = false;
+      recordingStartTime = Date.now();
+
+      stopRecordingProgress(false);
+      renderRecordingProgress(0);
+
+      recordingTimerInterval = setInterval(() => {
+        const elapsedSec = (Date.now() - recordingStartTime) / 1000;
+        renderRecordingProgress(elapsedSec);
+
+        const limits = getRecordingLimits(recordingTaskId);
+
+        if (isAutoStopTask(recordingTaskId) && elapsedSec >= limits.progressSeconds) {
+          stopCurrentRecording(true, "time");
+        }
+      }, 100);
+    }
+
+    function stopRecordingProgress(finalize = true) {
+      if (recordingTimerInterval) {
+        clearInterval(recordingTimerInterval);
+        recordingTimerInterval = null;
+      }
+
+      if (finalize && recordingStartTime) {
+        const finalDuration = (Date.now() - recordingStartTime) / 1000;
+        renderRecordingProgress(finalDuration);
+      }
+    }
+
+    function stopCurrentRecording(autoStopped = false, reason = "manual") {
+      const canStop = mediaRecorder && mediaRecorder.state !== "inactive";
+      const taskIdBeforeStop = recordingTaskId || taskSelect.value;
+
+      isRecording = false;
+      recordBtn.textContent = "⏺️";
+      recordBtn.classList.remove("recording");
+
+      if (canStop) {
+        recordingWasAutoStopped = autoStopped;
+        recordingAutoStopReason = reason;
+        recordingShouldAutoSubmit = isAutoAnalyzeTask(taskIdBeforeStop);
+
+        stopSilenceDetection();
+        stopRecordingProgress(true);
+        mediaRecorder.stop();
+
+        statusEl.textContent = autoStopped
+          ? getAutoStoppedText(taskIdBeforeStop, reason)
+          : messages.processing;
+      }
+    }
+
+    recordBtn.addEventListener("click", async () => {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
+
+      if (!isRecording) {
+        // Empezar a grabar
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            audio: {
+              autoGainControl: false,
+              noiseSuppression: false,
+              echoCancellation: false,
+              channelCount: 1,
+              sampleRate: 44100
+            }
+          });
+
+          const mimeTypeOptions = [
+            "audio/webm;codecs=opus",
+            "audio/ogg;codecs=opus",
+            "audio/webm",
+            "audio/ogg",
+            "audio/mp4"
+          ];
+          let mimeType = "";
+          for (const type of mimeTypeOptions) {
+            if (window.MediaRecorder && MediaRecorder.isTypeSupported(type)) {
+              mimeType = type;
+              break;
+            }
+          }
+
+          if (!window.MediaRecorder) {
+            statusEl.textContent = "MediaRecorder not supported.";
+            return;
+          }
+
+          mediaRecorder = mimeType
+            ? new MediaRecorder(stream, { mimeType })
+            : new MediaRecorder(stream);
+
+          recordedChunks = [];
+
+          mediaRecorder.ondataavailable = (e) => {
+            if (e.data.size > 0) {
+              recordedChunks.push(e.data);
+            }
+          };
+
+          mediaRecorder.onstop = () => {
+            const blobType = mediaRecorder.mimeType || mimeType || "audio/webm";
+            const blob = new Blob(recordedChunks, { type: blobType });
+
+            if (!blob || blob.size < 8000) {
+              statusEl.textContent = messages.recInvalid;
+              fileInput.value = "";
+
+              if (stream) {
+                stream.getTracks().forEach((track) => track.stop());
+                stream = null;
+              }
+
+              progressBadge.textContent = messages.recBadgeFinished;
+              progressBadge.classList.remove("is-complete");
+
+              updateSubmitState();
+              return;
+            }
+
+            const extension = blobType.includes("mp4")
+              ? ".mp4"
+              : blobType.includes("ogg")
+              ? ".ogg"
+              : ".webm";
+
+            const recordingMeta = detectDeviceAndBrowser();
+            const fileName = "recording_" + Date.now() + extension;
+            const file = new File([blob], fileName, { type: blobType });
+
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            fileInput.files = dataTransfer.files;
+
+            let metaInput = document.getElementById("browser-metadata-json");
+            if (!metaInput) {
+              metaInput = document.createElement("input");
+              metaInput.type = "hidden";
+              metaInput.name = "browser_metadata_json";
+              metaInput.id = "browser-metadata-json";
+              document.getElementById("audio-form").appendChild(metaInput);
+            }
+            metaInput.value = JSON.stringify(recordingMeta);
+
+            statusEl.textContent =
+              messages.ready.replace("{file}", fileName) +
+              ` (${Math.round(blob.size / 1024)} KB)`;
+
+            if (typeof recordingStartTime === "number") {
+              const finalDuration = (Date.now() - recordingStartTime) / 1000;
+              const limits = getRecordingLimits(recordingTaskId);
+
+              if (finalDuration >= limits.sufficientSeconds) {
+                progressBadge.textContent = isFreeSpeechTask(recordingTaskId)
+                  ? getFreeSpeechProgressText("complete")
+                  : isReadingTask(recordingTaskId)
+                  ? getReadingProgressText("complete")
+                  : messages.recBadgeComplete;
+
+                progressBadge.classList.add("is-complete");
+              } else {
+                progressBadge.textContent = messages.recBadgeFinished;
+                progressBadge.classList.remove("is-complete");
+              }
+            } else {
+              progressBadge.textContent = messages.recBadgeFinished;
+              progressBadge.classList.remove("is-complete");
+            }
+
+            const stoppedTaskId = recordingTaskId || taskSelect.value;
+            const shouldAutoSubmit = recordingShouldAutoSubmit && isAutoAnalyzeTask(stoppedTaskId);
+
+            if (recordingWasAutoStopped) {
+              statusEl.textContent += " · " + getAutoStoppedText(stoppedTaskId, recordingAutoStopReason);
+            }
+
+            recordingTaskId = null;
+            recordingWasAutoStopped = false;
+            recordingAutoStopReason = "manual";
+            recordingShouldAutoSubmit = false;
+
+            if (stream) {
+              stream.getTracks().forEach((track) => track.stop());
+              stream = null;
+            }
+
+            updateSubmitState();
+
+            if (shouldAutoSubmit) {
+              submitBtn.disabled = true;
+              submitBtn.textContent = messages.processing;
+              statusEl.textContent = messages.processing;
+
+              setTimeout(() => {
+                if (audioForm.requestSubmit) {
+                  audioForm.requestSubmit();
+                } else {
+                  audioForm.submit();
+                }
+              }, 250);
+            }
+          };
+
+          mediaRecorder.start();
+          
+          isRecording = true;
+          recordBtn.textContent = "⏹️";
+          recordBtn.classList.add("recording");
+          if (isBreathCueTask(taskSelect.value)) {
+            statusEl.textContent = "";
+            showBreathCue();
+          } else {
+            statusEl.textContent = messages.recording;
+          }
+
+          startRecordingProgress();
+          startSilenceDetection(stream, recordingTaskId);
+
+        } catch (err) {
+          console.error(err);
+          stopSilenceDetection();
+
+          if (stream) {
+            stream.getTracks().forEach((track) => track.stop());
+            stream = null;
+          }
+
+          statusEl.textContent = messages.recError.replace("{error}", err.message);
+        }
+      } else {
+        // Parar grabación manualmente
+        stopCurrentRecording(false);
+      }
+    });
+
+    audioForm.addEventListener("submit", () => {
+      const selectedTask = taskSelect.value;
+
+      if (selectedTask === "habla_libre") {
+        longAnalysisMessageEl.textContent = messages.hablaLibreSlow;
+        longAnalysisMessageEl.hidden = false;
+      } else {
+        longAnalysisMessageEl.textContent = "";
+        longAnalysisMessageEl.hidden = true;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = messages.processing;
+    });
+  </script>
+</body>
+</html>

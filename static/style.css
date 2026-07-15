@@ -1,0 +1,426 @@
+/* static/style.css
+   Hume-inspired (pastel gradient + pill buttons + soft cards), original code for AcousA
+*/
+
+/* ---------- Design tokens ---------- */
+:root{
+  /* Typography */
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
+  --text-main: #0b0d14;
+  --text-muted: rgba(11, 13, 20, 0.66);
+
+  /* Background + surfaces */
+  --bg-soft: #fff;
+  --card-bg: rgba(255, 255, 255, 0.78);
+  --card-bg-solid: #ffffff;
+  --border-soft: rgba(11, 13, 20, 0.12);
+
+  /* “Hume-ish” accent system (dark ink + soft tints) */
+  --accent-strong: #0b0d14;                 /* primary button */
+  --accent: rgba(11, 13, 20, 0.92);         /* hover/active */
+  --accent-soft: rgba(11, 13, 20, 0.06);    /* pills / subtle fills */
+
+  /* Gradient blobs */
+  --blob-pink: rgba(255, 90, 200, 0.20);
+  --blob-violet: rgba(123, 97, 255, 0.16);
+  --blob-cyan: rgba(72, 215, 255, 0.14);
+
+  /* Layout */
+  --maxw: 1040px;
+  --r-sm: 14px;
+  --r-md: 18px;
+  --r-lg: 26px;
+
+  --shadow-sm: 0 10px 24px rgba(11, 13, 20, 0.08);
+  --shadow-md: 0 18px 50px rgba(11, 13, 20, 0.12);
+
+  --pad-x: 20px;
+  --pad-y: 28px;
+}
+
+/* Optional: if you want Inter, include it in your HTML <head> via Google Fonts.
+   If you do, add "Inter" just after system-ui in --font-sans. */
+
+/* ---------- Base ---------- */
+*{ box-sizing:border-box; }
+html, body{ height:100%; }
+body{
+  margin:0;
+  font-family: var(--font-sans);
+  background: var(--bg-soft);
+  color: var(--text-main);
+}
+
+body::before{
+  content:"";
+  position: fixed;
+  inset: -20%;
+  z-index: -1;
+  pointer-events:none;
+  background:
+    radial-gradient(closest-side at 18% 22%, var(--blob-pink), transparent 65%),
+    radial-gradient(closest-side at 78% 18%, var(--blob-violet), transparent 62%),
+    radial-gradient(closest-side at 70% 74%, var(--blob-cyan), transparent 58%);
+}
+
+a{
+  color: inherit;
+  text-decoration: none;
+}
+a:hover{ text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+
+h1, h2, h3{
+  letter-spacing: -0.02em;
+}
+
+/* ---------- Shared wrappers ---------- */
+.container,
+.wrap,
+.home-wrap{
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: var(--pad-y) var(--pad-x) 56px;
+}
+
+/* ---------- Top “glass” bar ---------- */
+.topbar,
+.header{
+  display:flex;
+  justify-content: space-between;
+  align-items:center;
+  gap: 14px;
+
+  padding: 14px 16px;
+  border-radius: var(--r-lg);
+  border: 1px solid var(--border-soft);
+  background: var(--card-bg);
+  box-shadow: var(--shadow-sm);
+}
+
+@supports ((-webkit-backdrop-filter: blur(10px)) or (backdrop-filter: blur(10px))){
+  .topbar, .header{
+    background: rgba(255,255,255,0.62);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+  }
+}
+
+.subtitle{
+  margin: 6px 0 0;
+  color: var(--text-muted);
+  line-height: 1.35;
+}
+
+/* ---------- Cards ---------- */
+.card,
+.home-card,
+#audio-form{
+  background: var(--card-bg);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.card, .home-card{
+  padding: 18px 18px 16px;
+}
+
+.card h2, .home-card h2{ margin: 0 0 6px; }
+.card p, .home-card p{ margin: 0 0 14px; color: var(--text-muted); line-height: 1.45; }
+
+/* Grids */
+.card-grid,
+.home-cards{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-top: 14px;
+}
+@media (max-width: 720px){
+  .card-grid, .home-cards{ grid-template-columns: 1fr; }
+  .topbar, .header{ flex-direction: column; align-items: flex-start; }
+}
+
+/* ---------- Buttons (pill style) ---------- */
+.btn,
+.home-btn,
+#audio-form button[type="submit"],
+#record-btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap: 8px;
+
+  border-radius: 999px;
+  padding: 10px 16px;
+  font-weight: 650;
+  font-size: 0.98rem;
+  cursor:pointer;
+  border: 1px solid transparent;
+  text-decoration:none;
+  user-select:none;
+  transition: transform .06s ease, background .15s ease, border-color .15s ease, opacity .15s ease;
+}
+
+/* ===== Language pill (global) ===== */
+.lang-pill{
+  display: inline-flex;
+  align-items: center;
+  gap: .65rem;
+
+  height: 44px;
+  padding: 0 16px;
+  border-radius: 999px;
+
+  background: #0b0b0b;
+  border: 1px solid rgba(255,255,255,.18);
+  box-shadow: 0 10px 22px rgba(0,0,0,.18);
+
+  /* misma tipografía para TODO lo de dentro */
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+               "Liberation Mono", "Courier New", monospace;
+  font-size: 13px;
+  line-height: 1;
+  color: #fff;
+}
+
+/* asegura que hijos hereden igual (select a veces no hereda bien) */
+.lang-pill *{
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+.lang-pill__txt{
+  font-weight: 750;
+  letter-spacing: .12em;
+  opacity: .8;
+}
+
+.lang-pill__select{
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* select limpio y alineado */
+.lang-pill select{
+  font: inherit;
+  font-weight: 750;
+  letter-spacing: .08em;
+  color: inherit;
+
+  background: transparent;
+  border: none;
+  outline: none;
+  cursor: pointer;
+
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  padding: 0 18px 0 0; /* espacio para la flecha */
+  margin: 0;
+}
+
+/* opcional: fuerza mono dentro del desplegable también */
+.lang-pill select option{
+  font-family: inherit;
+}
+
+.lang-pill__chev{
+  position: absolute;
+  right: 0;
+  pointer-events: none;
+  opacity: .85;
+  transform: translateY(1px); /* micro-ajuste visual */
+}
+
+.res-icon img{
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+  display: block;
+}
+
+/* Primary = dark ink */
+.btn.primary,
+.home-btn,
+#audio-form button[type="submit"],
+#record-btn{
+  background: var(--accent-strong);
+  color: #fff;
+}
+.btn.primary:hover,
+.home-btn:hover,
+#audio-form button[type="submit"]:hover,
+#record-btn:hover{
+  background: var(--accent);
+  transform: translateY(-1px);
+}
+
+/* Secondary = light pill */
+.btn.secondary,
+.home-btn.secondary{
+  background: rgba(255,255,255,0.75);
+  color: var(--text-main);
+  border-color: var(--border-soft);
+}
+.btn.secondary:hover,
+.home-btn.secondary:hover{
+  background: rgba(255,255,255,0.92);
+  transform: translateY(-1px);
+}
+
+/* Disabled */
+.btn:disabled,
+#record-btn:disabled,
+#audio-form button[type="submit"]:disabled{
+  opacity: .45;
+  cursor:not-allowed;
+  transform:none;
+}
+
+/* Recording state */
+#record-btn.recording{
+  background: #111827;
+}
+
+.recording-progress-wrap{
+  margin-top: .85rem;
+  margin-bottom: 1rem;
+  padding: .95rem 1rem;
+  background: #fffaf8;
+  border: 1px solid rgba(0,0,0,.06);
+  border-radius: 16px;
+  box-shadow: 0 10px 22px rgba(0,0,0,.04);
+  display: none;
+  width: 100%;
+}
+
+.recording-progress-wrap.is-visible{
+  display: block;
+}
+
+.recording-progress-label{
+  display: block;
+  font-size: .92rem;
+  font-weight: 700;
+  color: #4a403d;
+  margin-bottom: .7rem;
+}
+
+.recording-progress-track{
+  width: 100%;
+  height: 18px;
+  background: #f1e3db;
+  border-radius: 999px;
+  overflow: hidden;
+  box-shadow: inset -2px 2px 4px rgba(120, 93, 77, .16);
+}
+
+.recording-progress-fill{
+  width: 0%;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #c9b6ff 0%, #ffd7b8 100%);
+  transition: width .12s linear, background .2s ease;
+}
+
+.recording-progress-fill.is-complete{
+  background: linear-gradient(90deg, #8fd6b5 0%, #55b987 100%);
+}
+
+.recording-timer{
+  margin-top: .45rem;
+  display: block;
+  font-size: .92rem;
+  color: #5f5a57;
+  font-variant-numeric: tabular-nums;
+}
+
+.recording-progress-badge{
+  display: inline-block;
+  margin-left: .45rem;
+  font-size: .85rem;
+  font-weight: 700;
+  color: #7a5c4b;
+}
+
+.recording-progress-badge.is-complete{
+  color: #18794e;
+}
+
+
+/* ---------- Forms ---------- */
+label{ font-weight: 600; }
+.field{ margin-bottom: 14px; }
+
+input[type="number"],
+select,
+input[type="file"]{
+  font: inherit;
+  margin-top: 6px;
+}
+
+input[type="number"],
+select{
+  padding: 10px 12px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border-soft);
+  background: rgba(255,255,255,0.85);
+}
+
+details.upload-option{
+  border: 1px dashed var(--border-soft);
+  border-radius: var(--r-md);
+  padding: 10px 12px;
+  background: rgba(255,255,255,0.6);
+}
+
+/* Alerts (you already render .alert in index.html) */
+.alert{
+  padding: 10px 12px;
+  border-radius: var(--r-md);
+  border: 1px solid rgba(255, 90, 200, 0.25);
+  background: rgba(255, 90, 200, 0.08);
+  color: rgba(11,13,20,0.92);
+  margin-bottom: 14px;
+}
+
+.banner{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.banner img{
+  display: block;
+  margin: 0 auto;
+  width: min(900px, 50%);
+  height: auto;
+}
+
+/* Utility */
+.sr-only{
+  position:absolute; width:1px; height:1px; padding:0; margin:-1px;
+  overflow:hidden; clip: rect(0,0,0,0); border:0;
+}
+
+/* Wizard steps (clinica) */
+.step-hidden{ display:none !important; }
+.step-section{ width:100%; }
+
+/* círculo del icono: blanco sólido */
+.res-icon{
+  background: #ffffff !important;
+  border: 1px solid rgba(0,0,0,.06);
+  box-shadow: 0 10px 22px rgba(0,0,0,.06);
+}
+
+/* icono dentro */
+.res-icon img{
+  background: transparent;
+  display: block;
+}
