@@ -3,6 +3,10 @@ scripts/centres_sd_robustos_controls.xlsx
 scripts/habla_libre_norms_norms.csv
 scripts/lectura_norms_universal.csv
 
+# Scripts auxiliares no parte del pipeline principal
+prosody_stdin.py
+shiny_apps/
+
 # Datos de análisis y grabaciones — nunca al repositorio
 results/
 uploads/
