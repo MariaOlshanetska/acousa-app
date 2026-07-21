@@ -1107,20 +1107,20 @@
     
     // Textos desde el backend
     const messages = {
-      unsupported: "{{ ui.msg_unsupported }}",
-      supported: "{{ ui.msg_supported }}",
-      recording: "{{ ui.msg_recording }}",
-      processing: "{{ ui.msg_processing }}",
-      ready: "{{ ui.msg_ready }}",
-      recTarget: "{{ ui.msg_rec_target }}",
-      recBreathCue: "{{ ui.msg_rec_breath_cue }}",
-      recSilenceAutoStopped: "{{ ui.msg_rec_silence_auto_stopped if ui.msg_rec_silence_auto_stopped is defined else ui.msg_processing }}",
-      recBadgeRecording: "{{ ui.msg_rec_badge_recording }}",
-      recBadgeComplete: "{{ ui.msg_rec_badge_complete }}",
-      recBadgeFinished: "{{ ui.msg_rec_badge_finished }}",
-      recError: "{{ ui.msg_rec_error }}",
-      recInvalid: "{{ ui.msg_rec_invalid }}",
-      hablaLibreSlow: "{{ ui.msg_habla_libre_slow }}"
+      unsupported: {{ ui.msg_unsupported | tojson }},
+      supported: {{ ui.msg_supported | tojson }},
+      recording: {{ ui.msg_recording | tojson }},
+      processing: {{ ui.msg_processing | tojson }},
+      ready: {{ ui.msg_ready | tojson }},
+      recTarget: {{ ui.msg_rec_target | tojson }},
+      recBreathCue: {{ ui.msg_rec_breath_cue | tojson }},
+      recSilenceAutoStopped: {{ (ui.msg_rec_silence_auto_stopped if ui.msg_rec_silence_auto_stopped is defined else ui.msg_processing) | tojson }},
+      recBadgeRecording: {{ ui.msg_rec_badge_recording | tojson }},
+      recBadgeComplete: {{ ui.msg_rec_badge_complete | tojson }},
+      recBadgeFinished: {{ ui.msg_rec_badge_finished | tojson }},
+      recError: {{ ui.msg_rec_error | tojson }},
+      recInvalid: {{ ui.msg_rec_invalid | tojson }},
+      hablaLibreSlow: {{ ui.msg_habla_libre_slow | tojson }}
     };
 
     let mediaRecorder = null;
@@ -1239,8 +1239,8 @@
     const consentRadios = document.querySelectorAll('input[name="consent_science"]');
     const stepAudio = document.getElementById("step-audio");
 
-    const consentInfoYes = "{{ ui.consent_info_yes }}";
-    const consentInfoNo = "{{ ui.consent_info_no }}";
+    const consentInfoYes = {{ ui.consent_info_yes | tojson }};
+    const consentInfoNo = {{ ui.consent_info_no | tojson }};
 
     function detectDeviceAndBrowser() {
       const ua = (navigator.userAgent || "").toLowerCase();

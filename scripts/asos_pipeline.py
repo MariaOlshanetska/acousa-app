@@ -575,19 +575,25 @@ def save_midpoint_fft_and_related(
     piece = extract_part(sound_whole, s1, s2)
     spec = _get_spectrum_from_sound(piece)
 
-    # Spectrum/PowerCepstrum/LPCSpectrum no es guarden a disc:
-    # els valors necessaris ja s'extreuen en memòria i es desen al TSV/CSV.
-    meta["spectrum_text"] = ""
+    # Guardar Spectrum: analyze_asos_all.R lo necesita obligatoriamente.
+    spectrum_path = out_dir / f"{basename}.Spectrum"
+    save_text_praat_object(spec, spectrum_path)
+    meta["spectrum_text"] = str(spectrum_path)
 
+    # Guardar PowerCepstrum.
     try:
         cep = call(spec, "To PowerCepstrum")
-        meta["powercepstrum_text"] = ""
+
+        powercepstrum_path = out_dir / f"{basename}.PowerCepstrum"
+        save_text_praat_object(cep, powercepstrum_path)
+        meta["powercepstrum_text"] = str(powercepstrum_path)
+
         try:
             call(cep, "Remove")
         except Exception:
             pass
     except Exception:
-        pass
+        meta["powercepstrum_text"] = ""
 
     # LPC longer window + Spectrum slice
     wL = float(lpc_extract_seconds)
@@ -625,14 +631,20 @@ def save_midpoint_fft_and_related(
             last_err = e
 
     if lpc_spec is not None:
-        meta["lpc_spectrum_text"] = ""
+        lpc_spectrum_path = out_dir / f"{basename}.LPCSpectrum"
+        save_text_praat_object(lpc_spec, lpc_spectrum_path)
+        meta["lpc_spectrum_text"] = str(lpc_spectrum_path)
+
         try:
             call(lpc_spec, "Remove")
         except Exception:
             pass
     else:
-        # no fem crash; deixem constància si vols mirar l'error
-        _ = last_err
+        meta["lpc_spectrum_text"] = ""
+        print(
+            f"[ASOS] Aviso: no se pudo generar LPCSpectrum: {last_err}",
+            flush=True,
+        )
 
     # cleanup
     for obj in (lpc, piece_lpc, spec, piece):

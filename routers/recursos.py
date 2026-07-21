@@ -24,11 +24,15 @@ RESOURCES = [
             "desc": {"es":"Formantes y visualización de vocales.", "ca":"Formants i visualització de vocals.", "en":"Formants & vowel visualization."}
             },
             {
-            "label": "Corrector TextGrids",
-            "url": "pronto",
+            "label": "Corrector de TextGrids",
+            "url": "/textgrid_corrector/",
             "open_new_tab": True,
             "icon": "icons/textgrid.svg",
-            "desc": {"es":"Próximamente.", "ca":"Aviat.", "en":"Soon."},
+            "desc": {
+                "es": "Compara archivos TextGrid con un modelo y evalúa la transcripción y la segmentación.",
+                "ca": "Compara fitxers TextGrid amb un model i avalua la transcripció i la segmentació.",
+                "en": "Compares TextGrid files with a reference model and evaluates transcription and segmentation.",
+                },
             },
         ],
     },
