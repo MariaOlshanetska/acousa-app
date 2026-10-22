@@ -105,14 +105,30 @@
     }
 
     .banner{
-      margin-top:1.5rem;
+      margin-top:2rem;
     }
 
+    /* Make the banner bigger (overrides style.css .banner img width) */
     .banner img{
-      max-width:100%;
-      border-radius:16px;
-      box-shadow: 0 14px 30px rgba(0,0,0,.06);
+      width: min(600px, 85%) !important;
+      max-width: 600px !important;
+      border-radius:18px;
+      box-shadow: 0 16px 34px rgba(0,0,0,.08);
       border: 1px solid rgba(0,0,0,.05);
+    }
+
+    .funding-notice{
+      margin:1.3rem auto 0;
+      max-width:620px;
+      padding:.95rem 1.3rem;
+      background:#fffaf8;
+      border:1px solid rgba(0,0,0,.06);
+      border-radius:14px;
+      box-shadow:0 8px 18px rgba(0,0,0,.04);
+      color: var(--muted);
+      font-size:.9rem;
+      line-height:1.55;
+      text-align:center;
     }
 
     .home-hero{
@@ -225,8 +241,24 @@
       </div>
 
       <div class="banner">
-        <img src="/static/Banner.png" alt="Banner">
+        <a
+          href="https://www.ub.edu/phoneticslaboratory/sites/acousa/"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="project-web-link"
+          aria-label="{{ ui.project_web_aria }}"
+        >
+          <img src="/static/Banner.png" alt="AcousA">
+
+          <span class="project-web-label">
+            {{ ui.project_web_link }} ↗
+          </span>
+        </a>
       </div>
+
+      <p class="funding-notice">
+        {{ ui.funding_notice if ui.funding_notice is defined else "Aquest web forma part del projecte AcousA, finançat pel MCIN/AEI amb referència PID2022-139004OA-I00." }}
+      </p>
     </div>
   </div>
 </body>

@@ -88,9 +88,9 @@ def run_mfa(
 
     if not cleaned_transcript.strip():
         raise RuntimeError(
-            "La transcripción de Whisper existe, pero al limpiarla para MFA ha quedado vacía.\n"
-            f"Transcripción original:\n{transcript}\n"
-            f"Carpeta de depuración: {tmpdir}"
+            "The Whisper transcription exists, but after cleaning it for MFA it became empty.\n"
+            f"Original transcription:\n{transcript}\n"
+            f"Debug folder: {tmpdir}"
         )
 
     cmd = [
@@ -119,18 +119,18 @@ def run_mfa(
 
     if result.returncode != 0:
         raise RuntimeError(
-            "MFA falló durante la alineación.\n\n"
-            "COMANDO:\n"
+            "MFA failed during alignment.\n\n"
+            "COMMAND:\n"
             + " ".join(cmd)
-            + "\n\nTRANSCRIPCIÓN ORIGINAL DE WHISPER:\n"
+            + "\n\nORIGINAL WHISPER TRANSCRIPTION:\n"
             + transcript
-            + "\n\nTRANSCRIPCIÓN LIMPIA PARA MFA:\n"
+            + "\n\nCLEANED TRANSCRIPTION FOR MFA:\n"
             + cleaned_transcript
-            + "\n\nSTDOUT MFA:\n"
+            + "\n\nMFA STDOUT:\n"
             + (result.stdout or "")
-            + "\n\nSTDERR MFA:\n"
+            + "\n\nMFA STDERR:\n"
             + (result.stderr or "")
-            + "\n\nCARPETA DE DEPURACIÓN:\n"
+            + "\n\nDEBUG FOLDER:\n"
             + str(tmpdir)
             + "\n"
         )
@@ -138,16 +138,16 @@ def run_mfa(
     textgrids = list(out_dir.rglob("*.TextGrid"))
     if not textgrids:
         raise RuntimeError(
-            "MFA terminó sin error, pero no generó ningún TextGrid.\n"
-            f"Carpeta de depuración: {tmpdir}\n"
-            f"STDOUT MFA:\n{result.stdout}\n"
-            f"STDERR MFA:\n{result.stderr}\n"
+            "MFA finished without error, but did not generate any TextGrid.\n"
+            f"Debug folder: {tmpdir}\n"
+            f"MFA STDOUT:\n{result.stdout}\n"
+            f"MFA STDERR:\n{result.stderr}\n"
         )
 
     final_tg = Path(tempfile.mkstemp(prefix="acousa_mfa_", suffix=".TextGrid")[1])
     shutil.copy2(textgrids[0], final_tg)
 
-    # Si todo va bien, limpiamos la carpeta temporal de debug.
+    # If everything goes well, clean up the temporary debug folder.
     shutil.rmtree(tmpdir, ignore_errors=True)
 
     return final_tg
@@ -219,7 +219,7 @@ def get_word_intervals(textgrid_path: Path) -> list[tuple[float, float, str]]:
                 if text.strip().lower() not in SILENCE_LABELS
             ]
 
-    # Fallback: si MFA cambia el nombre del tier, usamos el tier con más intervalos no vacíos.
+    # Fallback: if MFA changes the tier name, use the tier with the most non-empty intervals.
     candidates = []
     for name, intervals in tiers.items():
         non_empty = [
@@ -247,7 +247,7 @@ def get_phone_intervals(textgrid_path: Path) -> list[tuple[float, float, str]]:
                 if text.strip().lower() not in SILENCE_LABELS
             ]
 
-    # Fallback: busca un tier que parezca de phones
+    # Fallback: look for a tier that looks like a phones tier
     for name, intervals in tiers.items():
         if "phone" in name:
             return [
@@ -265,7 +265,7 @@ def count_syllables_spanish_word(word: str) -> int:
     if not word:
         return 0
 
-    # Estimación simple: grupos vocálicos. Suficiente para rates globales.
+    # Simple estimate: vowel groups. Enough for global rates.
     groups = re.findall(r"[aeiouáéíóúü]+", word)
     return max(1, len(groups))
 
@@ -277,11 +277,11 @@ def estimate_syllables_spanish(text: str) -> int:
 LEXICAL_UPOS = {"NOUN", "VERB", "ADJ", "ADV", "PROPN"}
 
 SUBORDINATE_DEPREL_PREFIXES = (
-    "advcl",      # subordinada adverbial
-    "ccomp",      # completiva finita
-    "xcomp",      # complemento abierto / infinitivo controlado
-    "acl",        # cláusula adnominal
-    "csubj",      # subordinada sujeto
+    "advcl",      # adverbial clause
+    "ccomp",      # finite complement clause
+    "xcomp",      # open complement / controlled infinitive
+    "acl",        # adnominal clause
+    "csubj",      # clausal subject
 )
 
 
@@ -293,65 +293,65 @@ def _norm_lemma(lemma: str) -> str:
 DATAMUSE_ENDPOINT = "https://api.datamuse.com/words"
 
 FREQ_CATEGORIES = [
-    "muy frecuentes",
-    "bastante frecuentes",
-    "frecuencia media",
-    "poco frecuentes",
-    "muy raras",
+    "very frequent",
+    "quite frequent",
+    "medium frequency",
+    "infrequent",
+    "very rare",
 ]
 
 
 def datamuse_frequency_category(freq_per_million: float | None) -> str:
     """
-    Categorías basadas en frecuencia por millón.
-    Cuanto menor la frecuencia, más raro/complejo el lema.
+    Categories based on frequency per million.
+    The lower the frequency, the rarer/more complex the lemma.
     """
     if freq_per_million is None:
-        return "muy raras"
+        return "very rare"
 
     if freq_per_million >= 100:
-        return "muy frecuentes"
+        return "very frequent"
     if freq_per_million >= 10:
-        return "bastante frecuentes"
+        return "quite frequent"
     if freq_per_million >= 1:
-        return "frecuencia media"
+        return "medium frequency"
     if freq_per_million >= 0.1:
-        return "poco frecuentes"
-    return "muy raras"
+        return "infrequent"
+    return "very rare"
 
 
 def frequency_category_score(category: str) -> int:
     """
-    Escala RLE:
-      1 = lemas muy frecuentes
-      5 = lemas muy poco frecuentes
+    RLE scale:
+      1 = very frequent lemmas
+      5 = very infrequent lemmas
 
-    Es una medida experimental de riqueza/singularidad léxica estimada,
-    no una medida clínica normativa.
+    It is an experimental measure of estimated lexical richness/singularity,
+    not a normative clinical measure.
     """
     mapping = {
-        "muy frecuentes": 1,
-        "bastante frecuentes": 2,
-        "frecuencia media": 3,
-        "poco frecuentes": 4,
-        "muy raras": 5,
+        "very frequent": 1,
+        "quite frequent": 2,
+        "medium frequency": 3,
+        "infrequent": 4,
+        "very rare": 5,
     }
     return mapping.get(category, 5)
 
 
 def lexical_complexity_label_from_score(score: float | None) -> str:
     if score is None:
-        return "no calculable"
+        return "not calculable"
 
     if score < 1.5:
-        return "vocabulario muy frecuente"
+        return "very frequent vocabulary"
     if score < 2.5:
-        return "vocabulario bastante frecuente"
+        return "quite frequent vocabulary"
     if score < 3.5:
-        return "vocabulario de frecuencia media"
+        return "medium-frequency vocabulary"
     if score < 4.5:
-        return "vocabulario poco frecuente"
-    return "vocabulario muy poco frecuente"
+        return "infrequent vocabulary"
+    return "very infrequent vocabulary"
 
 def _clamp_float(x: float, lo: float, hi: float) -> float:
     return max(lo, min(hi, x))
@@ -364,14 +364,14 @@ def rle_score_tail_sensitive(
     lexical_tokens: int,
 ) -> float | None:
     """
-    RLE = Riqueza Léxica Estimada, escala 1–5.
+    RLE = Estimated Lexical Richness, scale 1-5.
 
-    Esta versión es sensible a textos cortos y a la cola léxica:
-    no solo mira la media, sino también si aparecen lemas poco frecuentes
-    o muy poco frecuentes.
+    This version is sensitive to short texts and to the lexical tail:
+    it does not only look at the mean, but also at whether infrequent
+    or very infrequent lemmas appear.
 
-    1 = vocabulario muy frecuente
-    5 = vocabulario muy poco frecuente / muy marcado
+    1 = very frequent vocabulary
+    5 = very infrequent / highly marked vocabulary
     """
     if not token_scores or not unique_scores:
         return None
@@ -379,24 +379,24 @@ def rle_score_tail_sensitive(
     token_arr = np.array(token_scores, dtype=float)
     unique_arr = np.array(unique_scores, dtype=float)
 
-    # Normalizamos 1–5 a 0–1
+    # Normalize 1-5 to 0-1
     mean_unique_norm = (float(np.mean(unique_arr)) - 1.0) / 4.0
 
-    # Cola léxica: percentil alto de rareza.
-    # Esto hace que palabras muy poco frecuentes pesen más en textos cortos.
+    # Lexical tail: high percentile of rarity.
+    # This makes very infrequent words weigh more in short texts.
     p90_unique_norm = (float(np.percentile(unique_arr, 90)) - 1.0) / 4.0
 
     rare_unique_prop = float(np.mean(unique_arr >= 4.0))
     very_rare_unique_prop = float(np.mean(unique_arr >= 5.0))
 
-    # Presión de rareza: sqrt hace que 20–30% de lemas raros ya pese bastante.
+    # Rarity pressure: sqrt makes 20-30% of rare lemmas already weigh quite a lot.
     rare_pressure = np.sqrt(rare_unique_prop)
     very_rare_pressure = np.sqrt(very_rare_unique_prop)
 
-    # TTR léxico: en textos cortos suele ser informativo, pero no queremos que domine.
+    # Lexical TTR: in short texts it is usually informative, but we do not want it to dominate.
     ttr_norm = _clamp_float(float(lexical_ttr), 0.0, 1.0)
 
-    # Fórmula experimental: más sensible a vocabulario marcado.
+    # Experimental formula: more sensitive to marked vocabulary.
     rle_norm = (
         0.48 * p90_unique_norm
         + 0.18 * mean_unique_norm
@@ -407,8 +407,8 @@ def rle_score_tail_sensitive(
 
     rle = 1.0 + 4.0 * rle_norm
 
-    # Bonus moderado para textos cortos si tienen una proporción clara de lemas raros.
-    # Esto evita que textos breves y léxicamente marcados queden artificialmente bajos.
+    # Moderate bonus for short texts if they have a clear proportion of rare lemmas.
+    # This prevents short, lexically marked texts from ending up artificially low.
     if lexical_tokens < 90 and rare_unique_prop >= 0.18:
         rle += 0.45
     if lexical_tokens < 60 and rare_unique_prop >= 0.25:
@@ -434,8 +434,8 @@ def get_datamuse_frequency_for_lemma(
     timeout_sec: float = 3.0,
 ) -> dict:
     """
-    Consulta Datamuse para un lema.
-    Devuelve un dict robusto, para que la app no se rompa si la API falla.
+    Queries Datamuse for a lemma.
+    Returns a robust dict so the app does not break if the API fails.
     """
     lemma = (lemma or "").strip().lower()
 
@@ -444,7 +444,7 @@ def get_datamuse_frequency_for_lemma(
             "datamuse_status": "empty_lemma",
             "datamuse_word": "",
             "datamuse_frequency_per_million": None,
-            "frequency_category": "muy raras",
+            "frequency_category": "very rare",
         }
 
     params = {
@@ -472,14 +472,14 @@ def get_datamuse_frequency_for_lemma(
             "datamuse_status": f"api_error: {e}",
             "datamuse_word": "",
             "datamuse_frequency_per_million": None,
-            "frequency_category": "muy raras",
+            "frequency_category": "very rare",
         }
     except Exception as e:
         return {
             "datamuse_status": f"api_error: {e}",
             "datamuse_word": "",
             "datamuse_frequency_per_million": None,
-            "frequency_category": "muy raras",
+            "frequency_category": "very rare",
         }
 
     if not isinstance(data, list) or not data:
@@ -487,7 +487,7 @@ def get_datamuse_frequency_for_lemma(
             "datamuse_status": "not_found",
             "datamuse_word": "",
             "datamuse_frequency_per_million": None,
-            "frequency_category": "muy raras",
+            "frequency_category": "very rare",
         }
 
     item = data[0]
@@ -504,15 +504,15 @@ def get_datamuse_frequency_for_lemma(
 
 def analyze_stanza_complexity(text: str) -> tuple[dict, dict]:
     """
-    Devuelve:
-      - métricas sintácticas/léxicas para el CSV
-      - payload detallado de lemas para guardar como JSON .txt
+    Returns:
+      - syntactic/lexical metrics for the CSV
+      - detailed lemma payload to save as JSON .txt
     """
     try:
         import stanza
     except Exception as e:
         raise RuntimeError(
-            "No se pudo importar Stanza. Instala stanza en el .venv de la app."
+            "Could not import Stanza. Install stanza in the app's .venv."
         ) from e
 
     model_dir = os.getenv("STANZA_RESOURCES_DIR", "/srv/labfon/stanza_resources")
@@ -630,7 +630,7 @@ def analyze_stanza_complexity(text: str) -> tuple[dict, dict]:
     lexical_complexity_index = lexical_complexity_label_from_score(rle_score)
 
     rare_or_very_rare_tokens = (
-        category_token_counts["poco frecuentes"] + category_token_counts["muy raras"]
+        category_token_counts["infrequent"] + category_token_counts["very rare"]
     )
 
     lexical_complexity_rare_percent = (
@@ -695,10 +695,10 @@ def analyze_stanza_complexity(text: str) -> tuple[dict, dict]:
                 if mean_rarity_score is not None else None
             ),
             "rle_method": (
-                "Índice experimental sensible a la cola léxica. Combina el percentil 90 de rareza "
-                "de los lemas, la media de categorías, la proporción de lemas poco frecuentes o muy "
-                "poco frecuentes, la proporción de lemas muy poco frecuentes y el TTR léxico. "
-                "Está ajustado para no infraestimar textos breves."
+                "Experimental index sensitive to the lexical tail. It combines the 90th percentile of "
+                "lemma rarity, the mean of categories, the proportion of infrequent or very infrequent "
+                "lemmas, the proportion of very infrequent lemmas and the lexical TTR. "
+                "It is tuned so as not to underestimate short texts."
             ),
             "rare_or_very_rare_lexical_tokens_percent": round(lexical_complexity_rare_percent, 4),
             "mean_datamuse_frequency_per_million": (
@@ -706,11 +706,11 @@ def analyze_stanza_complexity(text: str) -> tuple[dict, dict]:
                 if mean_datamuse_frequency_per_million is not None else None
             ),
             "frequency_categories": {
-                "muy frecuentes": ">= 100 ocurrencias por millón",
-                "bastante frecuentes": "10–99.99 ocurrencias por millón",
-                "frecuencia media": "1–9.99 ocurrencias por millón",
-                "poco frecuentes": "0.1–0.99 ocurrencias por millón",
-                "muy raras": "< 0.1 ocurrencias por millón o no encontrado",
+                "very frequent": ">= 100 occurrences per million",
+                "quite frequent": "10-99.99 occurrences per million",
+                "medium frequency": "1-9.99 occurrences per million",
+                "infrequent": "0.1-0.99 occurrences per million",
+                "very rare": "< 0.1 occurrences per million or not found",
             },
             "token_counts_by_category": dict(category_token_counts),
             "lemma_counts_by_category": dict(category_lemma_counts),
@@ -792,18 +792,18 @@ def compute_metrics(
     voice_start = phone_intervals[0][0]
     voice_end = phone_intervals[-1][1]
 
-    # Duración del tramo de habla: desde el primer sonido MFA hasta el último.
-    # Incluye pausas internas.
+    # Speech segment duration: from the first MFA sound to the last.
+    # Includes internal pauses.
     speech_duration = max(voice_end - voice_start, 0.0)
 
-    # Tiempo articulado: suma de la duración de los sonidos no silenciosos del tier phones.
-    # Excluye intervalos vacíos/silenciosos.
+    # Articulated time: sum of the duration of the non-silent sounds in the phones tier.
+    # Excludes empty/silent intervals.
     articulation_duration = sum(
         max(xmax - xmin, 0.0)
         for xmin, xmax, _ in phone_intervals
     )
 
-    # Pausas: intervalos vacíos/silenciosos del tier phones dentro del tramo de habla.
+    # Pauses: empty/silent intervals in the phones tier within the speech segment.
     tiers = parse_textgrid_intervals(textgrid_path)
     phone_tier = tiers.get("phones") or tiers.get("phone") or []
     gaps = [
@@ -823,7 +823,7 @@ def compute_metrics(
     pause_percentage = (pause_total / speech_duration * 100.0) if speech_duration > 0 else 0.0
     long_pauses = sum(1 for g in gaps if g >= long_pause_threshold)
 
-    # Rates en sonidos por segundo, no sílabas por segundo.
+    # Rates in sounds per second, not syllables per second.
     speech_rate = sound_count / speech_duration if speech_duration > 0 else 0.0
     articulation_rate = sound_count / articulation_duration if articulation_duration > 0 else 0.0
 
@@ -894,7 +894,7 @@ def main():
     )
 
     if not transcript.strip():
-        raise RuntimeError("Whisper no ha generado transcripción. No se puede alinear con MFA.")
+        raise RuntimeError("Whisper did not generate a transcription. Cannot align with MFA.")
 
     temp_tg_path = run_mfa(
         wav_path=audio_path,
@@ -914,7 +914,7 @@ def main():
             long_pause_threshold=args.long_pause_threshold,
         )
 
-        # Guardamos la ruta final, no la temporal
+        # Save the final path, not the temporary one
         metrics["mfa_textgrid"] = str(out_textgrid)
 
         stanza_metrics, lemma_payload = analyze_stanza_complexity(transcript)

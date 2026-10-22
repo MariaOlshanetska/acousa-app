@@ -306,9 +306,71 @@
         </div>
       </div>
 
-      <div class="banner">
-        <img src="/static/Banner.png" alt="AcousA banner">
+      <!-- Añadir en templates/results.html, por ejemplo debajo de los botones de descarga -->
+      <div class="comparison-link-card">
+        <p>
+          <strong>
+            {% if lang == "ca" %}Vols comparar aquest resultat amb anàlisis anteriors?{% elif lang == "en" %}Would you like to compare this result with previous analyses?{% else %}¿Quieres comparar este resultado con análisis anteriores?{% endif %}
+          </strong>
+        </p>
+        <a class="comparison-link-btn" href="/recursos/comparativa?lang={{ lang }}">
+          {% if lang == "ca" %}Obrir la comparativa{% elif lang == "en" %}Open comparison{% else %}Abrir comparativa{% endif %}
+        </a>
       </div>
+
+      <style>
+        .comparison-link-card{
+          margin-top:1.25rem;
+          padding:1rem 1.1rem;
+          border:1px solid rgba(242,189,160,.65);
+          border-radius:14px;
+          background:#fff7f3;
+        }
+        .comparison-link-card p{ margin:.1rem 0 .75rem; }
+        .comparison-link-btn{
+          display:inline-block;
+          padding:.55rem 1rem;
+          border-radius:999px;
+          background:#e56c47;
+          color:#fff;
+          text-decoration:none;
+          font-weight:650;
+        }
+
+        .funding-notice{
+          margin:1.3rem auto 0;
+          max-width:620px;
+          padding:.95rem 1.3rem;
+          background:#fffaf8;
+          border:1px solid rgba(0,0,0,.06);
+          border-radius:14px;
+          box-shadow:0 8px 18px rgba(0,0,0,.04);
+          color:#666;
+          font-size:.9rem;
+          line-height:1.55;
+          text-align:center;
+        }
+      </style>
+
+      <div class="banner">
+        <a
+          href="https://www.ub.edu/phoneticslaboratory/sites/acousa/"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="project-web-link"
+          aria-label="{{ ui.project_web_aria }}"
+        >
+          <img src="/static/Banner.png" alt="AcousA">
+
+          <span class="project-web-label">
+            {{ ui.project_web_link }} ↗
+          </span>
+        </a>
+      </div>
+
+      <p class="funding-notice">
+        {{ ui.funding_notice if ui.funding_notice is defined else "This website is part of the AcousA project, funded by MCIN/AEI/10.13039/501100011033 under grant PID2022-139004OA-I00." }}
+      </p>
     </div>
   </div>
 

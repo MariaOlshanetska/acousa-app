@@ -9,12 +9,12 @@ suppressPackageStartupMessages({
 # -------------------------
 # Args
 # -------------------------
-# Uso:
+# Usage:
 #   Rscript analyze_asos_all.R <base_prefix> [out_csv] [out_png] [out_xlsx]
 #
-# base_prefix = ruta SIN extensión, p.ej:
+# base_prefix = path WITHOUT extension, e.g.:
 #   /home/.../results/abcd1234
-# que implica:
+# which implies:
 #   abcd1234.voice_quality.tsv
 #   abcd1234.Spectrum
 #   abcd1234.LPCSpectrum
@@ -22,7 +22,7 @@ suppressPackageStartupMessages({
 
 args <- commandArgs(trailingOnly = TRUE)
 if (length(args) < 1) {
-  stop("Falta <base_prefix>. Ej: Rscript analyze_asos_all.R /path/results/abcd1234", call. = FALSE)
+  stop("Missing <base_prefix>. E.g.: Rscript analyze_asos_all.R /path/results/abcd1234", call. = FALSE)
 }
 
 base_prefix <- args[1]
@@ -44,11 +44,11 @@ f_fft <- paste0(base_prefix, ".Spectrum")
 f_lpc <- paste0(base_prefix, ".LPCSpectrum")
 f_cep <- paste0(base_prefix, ".PowerCepstrum")
 
-if (!file.exists(f_vq))  stop("No existe: ", f_vq)
-if (!file.exists(f_fft)) stop("No existe: ", f_fft)
+if (!file.exists(f_vq))  stop("Does not exist: ", f_vq)
+if (!file.exists(f_fft)) stop("Does not exist: ", f_fft)
 
 # -------------------------
-# Helpers: leer Spectrum / PowerCepstrum (texto de Praat)
+# Helpers: read Spectrum / PowerCepstrum (Praat text)
 # -------------------------
 read_praat_spectrum2 <- function(path) {
   x <- readLines(path, encoding = "UTF-8", warn = FALSE)
@@ -187,7 +187,7 @@ spec_fft <- read_praat_spectrum2(f_fft)
 spec_lpc <- if (file.exists(f_lpc)) read_praat_spectrum2(f_lpc) else tibble(freq = numeric(), amp_db = numeric())
 cep      <- if (file.exists(f_cep)) read_praat_powercepstrum2(f_cep) else tibble(quef_s = numeric(), pow_db = numeric())
 
-# Renames para seguir tu script original
+# Renames to follow the original script
 df <- df %>%
   rename(
     h1_freq = h1_freq_hz_target,
@@ -242,7 +242,7 @@ df2 <- df %>%
   ) %>%
   ungroup()
 
-# Spectral zeroes (si hay LPC)
+# Spectral zeroes (if LPC is available)
 z <- if (nrow(spec_lpc) > 0) detect_zeroes(spec_lpc, n = 3, fmin = 200, fmax = 5000) else tibble()
 if (nrow(z) == 0) {
   z_wide <- tibble(
@@ -282,7 +282,7 @@ if (nrow(z) == 0) {
 df_out <- bind_cols(df2, z_wide)
 
 # -------------------------
-# Save Excel (todo)
+# Save Excel (everything)
 # -------------------------
 wb <- createWorkbook()
 addWorksheet(wb, "metrics")
@@ -294,11 +294,11 @@ if (nzchar(out_xlsx)) {
 }
 
 # -------------------------
-# Resum per a la web + resum llarg per al plot
+# Summary for the web + long summary for the plot
 # -------------------------
 # Notes:
-# - jitter/shimmer es passen a percentatge per casar amb els teus llindars clínics.
-# - H1-A1 es reporta amb la versió corregida (H1corr_A1corr), més estable acústicament.
+# - jitter/shimmer are converted to percentages to match the clinical thresholds.
+# - H1-A1 is reported with the corrected version (H1corr_A1corr), more acoustically stable.
 web_row <- tibble(
   mpt                       = col_or_na(df_out, "dur_local"),
   f0_mean_hz                = col_or_na(df_out, "f0_mean_hz"),
@@ -311,11 +311,11 @@ web_row <- tibble(
   h1_a1                     = col_or_na(df_out, "H1corr_A1corr")
 )
 
-# Normas robustas placeholder (igual que tu script)
+# Robust norms placeholder (same as the original script)
 plot_norms <- tribble(
   ~variable,                  ~center_robust, ~sd_robust, ~variable_label,
-  "mpt",                               18,         4,  "Durada (MPT, s)",
-  "f0_mean_hz",                       120,        25,  "F0 mitjà (Hz)",
+  "mpt",                               18,         4,  "Duration (MPT, s)",
+  "f0_mean_hz",                       120,        25,  "Mean F0 (Hz)",
   "jitter_pct",                      0.15,      0.10,  "Jitter (%)",
   "shimmer_pct",                     4.00,      2.00,  "Shimmer (%)",
   "hnr_db",                            25,         5,  "HNR (dB)",
@@ -353,15 +353,15 @@ mahal2 <- sum(df_summary$z^2, na.rm = TRUE)
 global_percentile <- pchisq(mahal2, df = k) * 100
 mean_abs_z <- mean(abs(df_summary$z), na.rm = TRUE)
 
-caption_text <- sprintf("• Percentil multivariant (χ²): %.1f%% • Mitjana |z|: %.2f",
+caption_text <- sprintf("• Multivariate percentile (χ²): %.1f%% • Mean |z|: %.2f",
                         global_percentile, mean_abs_z)
 
-ordre_vars <- plot_norms$variable_label
+order_vars <- plot_norms$variable_label
 
 
 df_plot <- df_summary %>%
   mutate(
-    variable_label = factor(variable_label, levels = ordre_vars),
+    variable_label = factor(variable_label, levels = order_vars),
     variable_f = fct_rev(variable_label),
     y = as.numeric(variable_f)
   )
@@ -379,8 +379,8 @@ p <- ggplot(df_plot, aes(x = z, y = y)) +
   scale_x_continuous(limits = c(-lim, lim), name = NULL) +
   scale_y_continuous(breaks = df_plot$y, labels = df_plot$variable_label, name = NULL) +
   labs(
-    title = "Perfil clínic  de quality – /a/ sostinguda",
-    subtitle = "Variables clau per a GRBAS (valors estandarditzats)",
+    title = "Clinical quality profile – sustained /a/",
+    subtitle = "Key variables for GRBAS (standardized values)",
     caption = caption_text
   ) +
   theme_minimal(base_size = 13) +
@@ -390,10 +390,10 @@ if (nzchar(out_png)) {
   ggsave(out_png, plot = p, width = 10, height = 6, dpi = 150)
 }
 
-# CSV ample d'una sola fila: és el que la web pot llegir directament.
+# Single-row wide CSV: this is what the web can read directly.
 write_csv(web_row, out_csv)
 
-# CSV llarg auxiliar: útil si després vols una taula més rica o debug.
+# Auxiliary long CSV: useful if you later want a richer table or for debugging.
 out_long_csv <- paste0(base_prefix, "_summary_long.csv")
 
 write_csv(

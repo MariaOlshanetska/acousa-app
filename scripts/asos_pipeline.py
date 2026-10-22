@@ -4,22 +4,22 @@
 """
 integrated_voice_quality_pipeline.py
 
-Pipeline únic:
-1) Llegeix un WAV, el converteix a mono i detecta un tram de veu contínua.
-   Crea un TextGrid amb 1 sol tier i un sol interval etiquetat (segment d'interès).
-2) Extreu aquest segment del so i genera/desa objectes de Praat:
+Single pipeline:
+1) Reads a WAV, converts it to mono and detects a continuous voice segment.
+   Creates a TextGrid with a single tier and a single labeled interval (segment of interest).
+2) Extracts that segment from the sound and generates/saves Praat objects:
      <basename>.Pitch, <basename>.PointProcess, <basename>.Intensity, <basename>.Harmonicity
-3) Extreu mesures de voice quality del segment (una fila) i les desa en TSV.
-4) (NOU) Integra el flux de export_H1_A1_inputs.praat:
-   - Midpoint F0, F1–F4 i B1–B4 (sobre el so complet, més estable)
-   - Mitjanes robustes F1–F4 i B1–B4 dins l’interval
-   - Frequències objectiu: H1 (=F0), A1..A4 (=harmònic més proper a F1..F4)
-   - Desa:
-       <basename>.Spectrum (FFT finestra curta al midpoint, text)
+3) Extracts voice quality measures from the segment (one row) and saves them to TSV.
+4) (NEW) Integrates the export_H1_A1_inputs.praat flow:
+   - Midpoint F0, F1-F4 and B1-B4 (over the whole sound, more stable)
+   - Robust means F1-F4 and B1-B4 within the interval
+   - Target frequencies: H1 (=F0), A1..A4 (=harmonic closest to F1..F4)
+   - Saves:
+       <basename>.Spectrum (short-window FFT at the midpoint, text)
        <basename>.PowerCepstrum (text)
-       <basename>.LPCSpectrum (slice d’un LPC sobre finestra més llarga, text)
+       <basename>.LPCSpectrum (slice of an LPC over a longer window, text)
 
-Dependències:
+Dependencies:
   pip install praat-parselmouth numpy
 """
 
@@ -57,7 +57,7 @@ def save_text_praat_object(obj, out_path: Path) -> None:
             return
         except Exception:
             pass
-    raise RuntimeError(f"No he pogut desar l'objecte a {out_path}")
+    raise RuntimeError(f"Could not save the object to {out_path}")
 
 
 # ------------------------- robust Praat wrappers (version-proof) -------------------------
@@ -191,8 +191,8 @@ def detect_voiced_region(
     f0_floor: float = 50.0,
     f0_ceiling: float = 500.0,
     intensity_drop_db: float = 30.0,
-    min_duration: float = 0.20,          # mínim tècnic per considerar candidat
-    preferred_duration: float = 3.0,     # objectiu real
+    min_duration: float = 0.20,          # technical minimum to consider a candidate
+    preferred_duration: float = 3.0,     # actual target
     onset_pad: float = 0.02,
     offset_pad: float = 0.00,
     min_run_frames: int = 4,
@@ -284,13 +284,13 @@ def detect_voiced_region(
     if not candidates:
         return 0.0, duration
 
-    # 1) preferim candidats de >= 3 s
+    # 1) prefer candidates >= 3 s
     preferred = [c for c in candidates if c[2] >= preferred_duration]
     if preferred:
         best = max(preferred, key=lambda x: x[2])
         return best[0], best[1]
 
-    # 2) si no n'hi ha cap de 3 s, retornem el més llarg
+    # 2) if none reach 3 s, return the longest one
     best = max(candidates, key=lambda x: x[2])
     return best[0], best[1]
 
@@ -393,7 +393,7 @@ def spectrum_max_in_band_db(spectrum, f_center: float, tol_hz: float) -> float:
 
 # ------------------------- Praat-like summary features (from export_H1_A1_inputs.praat) -------------------------
 def _get_spectrum_from_sound(sound_piece):
-    # Praat: "To Spectrum" (a vegades amb arg "yes" / "no")
+    # Praat: "To Spectrum" (sometimes with arg "yes" / "no")
     try:
         return call(sound_piece, "To Spectrum")
     except Exception:
@@ -416,12 +416,12 @@ def compute_praatstyle_mid_and_means(
     intensity_floor_hz: float,
 ) -> Dict[str, float]:
     """
-    Replica (per 1 interval) la part de:
-      - Pitch i Formant calculats sobre so complet
-      - valors al midpoint (F0,F1..F4 i B1..B4)
-      - mitjanes robustes dins interval (F1..F4 i B1..B4)
-      - intensitat: mid i mean
-      - freq objectiu: H1,A1..A4
+    Replicates (for 1 interval) the part that computes:
+      - Pitch and Formant over the whole sound
+      - values at the midpoint (F0, F1..F4 and B1..B4)
+      - robust means within the interval (F1..F4 and B1..B4)
+      - intensity: mid and mean
+      - target freq: H1, A1..A4
     """
     out: Dict[str, float] = {}
 
@@ -430,14 +430,14 @@ def compute_praatstyle_mid_and_means(
     out["t_end"] = float(seg_end)
     out["t_mid"] = float(tmid)
 
-    # Pitch & Formant sobre el so complet (com al Praat script)
+    # Pitch & Formant over the whole sound (as in the Praat script)
     pitch = to_pitch_by_choice(sound_whole, pitch_approach, pitch_floor, pitch_ceiling)
     formant = call(
         sound_whole, "To Formant (burg)",
         0.0, int(num_formants), float(formant_ceiling), float(formant_window), float(formant_preemph)
     )
 
-    # Intensity sobre el so complet
+    # Intensity over the whole sound
     intensity = to_intensity_robust(sound_whole, time_step=0.0, minimum_pitch=float(intensity_floor_hz), subtract_mean="yes")
 
     # Midpoint F0
@@ -455,7 +455,7 @@ def compute_praatstyle_mid_and_means(
         b_mid[key] = safe_float(call(formant, "Get bandwidth at time", i, tmid, "Hertz", "Linear"))
         out[key] = b_mid[key]
 
-    # Robust means (F1–F4, B1–B4) dins interval
+    # Robust means (F1-F4, B1-B4) within the interval
     dt = float(mean_step_seconds)
     sumF = {1: 0.0, 2: 0.0, 3: 0.0, 4: 0.0}
     sumB = {1: 0.0, 2: 0.0, 3: 0.0, 4: 0.0}
@@ -475,7 +475,7 @@ def compute_praatstyle_mid_and_means(
             sumF[3] += f3t
             sumF[4] += f4t
 
-            # bandwidths poden ser undefined; suma només si definits
+            # bandwidths can be undefined; only add if defined
             for j in (1, 2, 3, 4):
                 bt = safe_float(call(formant, "Get bandwidth at time", j, t, "Hertz", "Linear"))
                 if math.isfinite(bt):
@@ -488,7 +488,7 @@ def compute_praatstyle_mid_and_means(
         out["f2_mean_hz_praatstyle"] = sumF[2] / n_frames
         out["f3_mean_hz_praatstyle"] = sumF[3] / n_frames
         out["f4_mean_hz_praatstyle"] = sumF[4] / n_frames
-        # com al Praat script: divideix també per n_frames
+        # as in the Praat script: also divide by n_frames
         out["b1_mean_hz_praatstyle"] = sumB[1] / n_frames
         out["b2_mean_hz_praatstyle"] = sumB[2] / n_frames
         out["b3_mean_hz_praatstyle"] = sumB[3] / n_frames
@@ -504,7 +504,7 @@ def compute_praatstyle_mid_and_means(
     out["int_mid_db_praatstyle"] = safe_float(call(intensity, "Get value at time", tmid, "cubic"))
     out["int_mean_db_praatstyle"] = safe_float(call(intensity, "Get mean", float(seg_start), float(seg_end), "energy"))
 
-    # Harmonic target frequencies: H1 (=F0) i A1..A4 (harmònic més proper als formants)
+    # Harmonic target frequencies: H1 (=F0) and A1..A4 (harmonic closest to the formants)
     out["h1_freq_hz_target"] = f0_mid
     if math.isfinite(f0_mid) and f0_mid > 0:
         for fk, outk in [
@@ -549,10 +549,10 @@ def save_midpoint_fft_and_related(
     lpc_slice_to_hz: float,
 ) -> Dict[str, str]:
     """
-    Desa:
-      - <basename>.Spectrum (FFT al voltant de t_mid, finestra curta)
+    Saves:
+      - <basename>.Spectrum (FFT around t_mid, short window)
       - <basename>.PowerCepstrum
-      - <basename>.LPCSpectrum (slice d’un LPC sobre finestra més llarga)
+      - <basename>.LPCSpectrum (slice of an LPC over a longer window)
     """
     meta: Dict[str, str] = {}
 
@@ -575,12 +575,12 @@ def save_midpoint_fft_and_related(
     piece = extract_part(sound_whole, s1, s2)
     spec = _get_spectrum_from_sound(piece)
 
-    # Guardar Spectrum: analyze_asos_all.R lo necesita obligatoriamente.
+    # Save Spectrum: analyze_asos_all.R requires it.
     spectrum_path = out_dir / f"{basename}.Spectrum"
     save_text_praat_object(spec, spectrum_path)
     meta["spectrum_text"] = str(spectrum_path)
 
-    # Guardar PowerCepstrum.
+    # Save PowerCepstrum.
     try:
         cep = call(spec, "To PowerCepstrum")
 
@@ -611,11 +611,11 @@ def save_midpoint_fft_and_related(
 
     lpc = call(piece_lpc, "To LPC (autocorrelation)", int(lpc_order), float(lpc_window), float(lpc_timestep), float(lpc_preemph))
 
-    # t_mid dins la finestra local
+    # t_mid within the local window
     lpc_mid = wL / 2.0
 
     lpc_spec = None
-    # Praat signatures poden variar; provem opcions compatibles amb el teu script (20 0 50)
+    # Praat signatures can vary; try options compatible with your script (20 0 50)
     candidates = [
         ("To Spectrum (slice)", (lpc_mid, float(lpc_slice_bandwidth), float(lpc_slice_from_hz), float(lpc_slice_to_hz))),
         ("To Spectrum (slice)...", (lpc_mid, float(lpc_slice_bandwidth), float(lpc_slice_from_hz), float(lpc_slice_to_hz))),
@@ -642,7 +642,7 @@ def save_midpoint_fft_and_related(
     else:
         meta["lpc_spectrum_text"] = ""
         print(
-            f"[ASOS] Aviso: no se pudo generar LPCSpectrum: {last_err}",
+            f"[ASOS] Warning: could not generate LPCSpectrum: {last_err}",
             flush=True,
         )
 
@@ -743,7 +743,7 @@ def measure_segment_vq(
         ]:
             out[k] = float("nan")
 
-    # Formants (Burg) sobre el segment (a part del “praatstyle” sobre el so complet)
+    # Formants (Burg) over the segment (apart from the "praatstyle" over the whole sound)
     try:
         formant = call(seg, "To Formant (burg)", 0.0, formant_n, formant_max, formant_window, formant_preemph)
 
@@ -772,35 +772,35 @@ def main() -> None:
     ap = argparse.ArgumentParser()
 
     ap.add_argument("--wav", required=True, help="Path to .wav")
-    ap.add_argument("--out-dir", default=None, help="Carpeta de sortida (default: mateixa del wav)")
-    ap.add_argument("--tier-name", default="segments", help="Nom del tier únic del TextGrid")
-    ap.add_argument("--label", default="v", help="Etiqueta del segment d'interès dins el tier")
+    ap.add_argument("--out-dir", default=None, help="Output folder (default: same as the wav)")
+    ap.add_argument("--tier-name", default="segments", help="Name of the single TextGrid tier")
+    ap.add_argument("--label", default="v", help="Label of the segment of interest within the tier")
 
-    # Detecció (pas 1)
+    # Detection (step 1)
     ap.add_argument("--step", type=float, default=0.01)
     ap.add_argument("--detect-f0-floor", type=float, default=50.0)
     ap.add_argument("--detect-f0-ceiling", type=float, default=500.0)
     ap.add_argument("--intensity-drop-db", type=float, default=30.0)
     ap.add_argument("--min-duration", type=float, default=0.20)
 
-    # Pitch/Harmonicity objectes (pas 2)
+    # Pitch/Harmonicity objects (step 2)
     ap.add_argument("--pitch-approach", choices=["raw ac", "ac", "cc", "raw cc", "raw_ac", "raw_cc"], default="raw ac")
     ap.add_argument("--harmonicity-approach", choices=["cc", "ac"], default="cc")
     ap.add_argument("--pitch-floor", type=float, default=75.0)
     ap.add_argument("--pitch-ceiling", type=float, default=600.0)
 
-    # Voice quality (pas 3)
+    # Voice quality (step 3)
     ap.add_argument("--pp-ceiling", type=float, default=500.0)
     ap.add_argument("--formant-max", type=float, default=5500.0)
     ap.add_argument("--formant-n", type=int, default=5)
     ap.add_argument("--formant-window", type=float, default=0.025)
     ap.add_argument("--formant-preemph", type=float, default=50.0)
 
-    # Espectre simple (H1/H2/H4 + 2k/5k) com abans
+    # Simple spectrum (H1/H2/H4 + 2k/5k) as before
     ap.add_argument("--hband-tol-prop-f0", type=float, default=0.06)
     ap.add_argument("--fixedband-tol-hz", type=float, default=20.0)
 
-    # ---- NOU: paràmetres “Praat export_H1_A1_inputs”
+    # ---- NEW: "Praat export_H1_A1_inputs" parameters
     ap.add_argument("--fft-window-seconds", type=float, default=0.030)
     ap.add_argument("--mean-step-seconds", type=float, default=0.01)
     ap.add_argument("--mean-min-frames", type=int, default=3)
@@ -941,7 +941,7 @@ def main() -> None:
         "a2k_db": float(a2k),
         "a5k_db": float(a5k),
 
-        # Fitxers extra “praat export”
+        # Extra "praat export" files
         "spectrum_text": saved_extra.get("spectrum_text", ""),
         "powercepstrum_text": saved_extra.get("powercepstrum_text", ""),
         "lpc_spectrum_text": saved_extra.get("lpc_spectrum_text", ""),

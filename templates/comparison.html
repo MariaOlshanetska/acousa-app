@@ -1,0 +1,491 @@
+<!doctype html>
+<html lang="{{ lang }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ cmp.title }}</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <style>
+    :root{ --accent:#e56c47; --accent-soft:#fde0d2; --border:#f2bda0; }
+    .wrap{ max-width:1050px; margin:0 auto; padding:2rem 1rem 3rem; }
+    .card{ background:#fff; border-radius:16px; padding:1.25rem; box-shadow:0 10px 25px rgba(0,0,0,.06); margin-top:1rem; }
+    .field{ margin-top:1rem; }
+    .help{ color:#666; line-height:1.45; }
+    .error{ margin-top:1rem; padding:.85rem 1rem; border-radius:12px; background:#fff0ec; border:1px solid #ef9a7a; color:#8a2f16; }
+    .warning{ margin-top:1rem; padding:.85rem 1rem; border-radius:12px; background:#fff9e8; border:1px solid #ead28a; color:#6d570b; }
+    .submit-btn{ margin-top:1rem; padding:.6rem 1.15rem; border:0; border-radius:999px; background:var(--accent); color:#fff; font-weight:650; cursor:pointer; }
+    input[type="file"]{ display:block; margin-top:.5rem; max-width:100%; }
+
+    .upload-list{
+      display:grid;
+      gap:.8rem;
+      margin-top:1rem;
+    }
+
+    .upload-slot{
+      display:grid;
+      grid-template-columns:180px minmax(0, 1fr);
+      align-items:center;
+      gap:1rem;
+      padding:.9rem 1rem;
+      background:#fffaf8;
+      border:1px solid #eee;
+      border-radius:14px;
+    }
+
+    .upload-slot label{
+      margin:0;
+      font-weight:700;
+    }
+
+    .upload-slot input[type="file"]{
+      width:100%;
+      min-width:0;
+      margin:0;
+    }
+
+    @media (max-width:700px){
+      .upload-slot{
+        grid-template-columns:1fr;
+        gap:.45rem;
+      }
+    }
+    .table-wrap{
+      width:100%;
+      overflow-x:auto;
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      table-layout:fixed;
+      margin-top:.75rem;
+    }
+
+    th,
+    td{
+      padding:.65rem;
+      border-bottom:1px solid #eee;
+      text-align:left;
+      vertical-align:top;
+    }
+
+    th{
+      background:#fff7f3;
+    }
+
+    /* Número */
+    th:nth-child(1),
+    td:nth-child(1){
+      width:42px;
+    }
+
+    /* Nombre del CSV */
+    th:nth-child(2),
+    td:nth-child(2){
+      width:auto;
+    }
+
+    .filename-cell{
+      overflow:hidden;
+      white-space:nowrap;
+      text-overflow:ellipsis;
+    }
+
+    .metric-controls{
+      margin:.85rem 0 1rem;
+      padding:.9rem 1rem;
+      background:#fffaf8;
+      border:1px solid #eee;
+      border-radius:14px;
+    }
+
+    .metric-controls-title{
+      margin-bottom:.7rem;
+      font-weight:700;
+    }
+
+    .metric-actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:.5rem;
+      margin-bottom:.8rem;
+    }
+
+    .metric-action-btn{
+      padding:.42rem .8rem;
+      border:1px solid #ddd;
+      border-radius:999px;
+      background:#fff;
+      color:#333;
+      font:inherit;
+      font-size:.9rem;
+      font-weight:650;
+      cursor:pointer;
+    }
+
+    .metric-action-btn:hover{
+      background:#fff4ef;
+      border-color:#e56c47;
+    }
+
+    .metric-list{
+      display:flex;
+      flex-wrap:wrap;
+      gap:.55rem;
+    }
+
+    .metric-chip{
+      display:inline-flex;
+      align-items:center;
+      gap:.45rem;
+      max-width:100%;
+      padding:.45rem .7rem;
+      background:#fff;
+      border:1px solid #ddd;
+      border-radius:999px;
+      cursor:pointer;
+      font-size:.9rem;
+      line-height:1.2;
+    }
+
+    .metric-chip:hover{
+      border-color:#e56c47;
+    }
+
+    .metric-chip input{
+      flex:0 0 auto;
+      margin:0;
+    }
+    #comparison-plot{ min-height:520px; }
+    a{ color:var(--accent); }
+    @media (max-width:700px){ #comparison-plot{ min-height:450px; } th,td{ font-size:.9rem; } }
+  </style>
+</head>
+<body class="resources-page-background">
+  <div class="comparison-page">
+    <div class="comparison-shell">
+
+      <a class="comparison-back" href="/recursos?lang={{ lang }}">
+        ⟵ {{ cmp.back }}
+      </a>
+
+      <h1 class="comparison-title">{{ cmp.title }}</h1>
+      <p class="comparison-intro">{{ cmp.intro }}</p>
+
+    <div class="card">
+      <form id="comparison-form" action="/recursos/comparativa" method="post" enctype="multipart/form-data">
+        <input type="hidden" name="lang" value="{{ lang }}">
+
+        <div class="field">
+          <strong>{{ cmp.upload_label }}</strong>
+          <p class="help">{{ cmp.upload_help }}</p>
+
+          <div class="upload-list">
+            <div class="upload-slot">
+              <label for="file-1">{{ cmp.file_1 }}</label>
+              <input
+                class="comparison-file-input"
+                id="file-1"
+                name="file_1"
+                type="file"
+                accept=".csv,text/csv"
+                required
+              >
+            </div>
+
+            <div class="upload-slot">
+              <label for="file-2">{{ cmp.file_2 }}</label>
+              <input
+                class="comparison-file-input"
+                id="file-2"
+                name="file_2"
+                type="file"
+                accept=".csv,text/csv"
+                required
+              >
+            </div>
+
+            <div class="upload-slot">
+              <label for="file-3">{{ cmp.file_3 }}</label>
+              <input
+                class="comparison-file-input"
+                id="file-3"
+                name="file_3"
+                type="file"
+                accept=".csv,text/csv"
+              >
+            </div>
+
+            <div class="upload-slot">
+              <label for="file-4">{{ cmp.file_4 }}</label>
+              <input
+                class="comparison-file-input"
+                id="file-4"
+                name="file_4"
+                type="file"
+                accept=".csv,text/csv"
+              >
+            </div>
+
+            <div class="upload-slot">
+              <label for="file-5">{{ cmp.file_5 }}</label>
+              <input
+                class="comparison-file-input"
+                id="file-5"
+                name="file_5"
+                type="file"
+                accept=".csv,text/csv"
+              >
+            </div>
+          </div>
+        </div>
+
+        <button class="submit-btn" type="submit">{{ cmp.submit }}</button>
+      </form>
+
+      {% if error_message %}
+        <div class="error" role="alert">{{ error_message }}</div>
+      {% endif %}
+      </div>
+
+      {% if plot_data_json %}
+        <div class="card">
+          <h2>{{ cmp.plot_title }}</h2>
+
+      <div class="metric-controls">
+        <div class="metric-controls-title">
+          {% if lang == "ca" %}
+            Mesures mostrades
+          {% elif lang == "en" %}
+            Displayed measures
+          {% else %}
+            Medidas mostradas
+          {% endif %}
+        </div>
+
+        <div class="metric-actions">
+          <button
+            id="select-all-metrics"
+            class="metric-action-btn"
+            type="button"
+          >
+            {% if lang == "ca" %}
+              Seleccionar-ho tot
+            {% elif lang == "en" %}
+              Select all
+            {% else %}
+              Seleccionar todo
+            {% endif %}
+          </button>
+
+          <button
+            id="clear-all-metrics"
+            class="metric-action-btn"
+            type="button"
+          >
+            {% if lang == "ca" %}
+              Desmarcar-ho tot
+            {% elif lang == "en" %}
+              Clear all
+            {% else %}
+              Desmarcar todo
+            {% endif %}
+          </button>
+        </div>
+
+        <div id="metric-list" class="metric-list"></div>
+      </div>
+
+      <div id="comparison-plot"></div>
+    </div>
+
+      <div class="card">
+        <h2>{{ cmp.files_title }}</h2>
+        <div class="table-wrap">
+          <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>{{ cmp.file }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in analyses %}
+              <tr>
+                <td>{{ item.position }}</td>
+                <td class="filename-cell" title="{{ item.filename }}">
+                  {{ item.filename }}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      </div>
+    {% endif %}
+
+      <div class="banner" style="margin-top:1.5rem;">
+        <img src="/static/Banner.png" alt="Banner">
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById("comparison-form");
+
+    const fileInputs = Array.from(
+      document.querySelectorAll(".comparison-file-input")
+    );
+
+    form.addEventListener("submit", (event) => {
+      const selectedSlots = fileInputs.map(
+        input => Boolean(input.files && input.files.length)
+      );
+
+      const selectedCount = selectedSlots.filter(Boolean).length;
+
+      if (selectedCount < 2 || selectedCount > 5) {
+        event.preventDefault();
+        alert({{ cmp.error_count | tojson }});
+        return;
+      }
+
+      const lastSelectedIndex = selectedSlots.lastIndexOf(true);
+
+      const hasGap = selectedSlots
+        .slice(0, lastSelectedIndex + 1)
+        .some(selected => !selected);
+
+      if (hasGap) {
+        event.preventDefault();
+        alert({{ cmp.error_gap | tojson }});
+      }
+    });
+
+    {% if plot_data_json %}
+      const plotData = {{ plot_data_json | safe }};
+
+      const plotElement = document.getElementById("comparison-plot");
+      const metricList = document.getElementById("metric-list");
+      const selectAllButton = document.getElementById("select-all-metrics");
+      const clearAllButton = document.getElementById("clear-all-metrics");
+
+      const traces = plotData.metrics.map((metric) => ({
+        x: plotData.labels,
+        y: metric.values,
+        name: metric.name,
+        mode: "lines+markers",
+        visible: true,
+        customdata: plotData.filenames.map((filename, index) => [
+          filename,
+          metric.delta_labels[index]
+        ]),
+        hovertemplate:
+          "%{customdata[0]}<br>" +
+          metric.name + ": %{y:.5g}<br>" +
+          "Δ: %{customdata[1]}<extra></extra>"
+      }));
+
+      Plotly.newPlot(
+        plotElement,
+        traces,
+        {
+          title: {
+            text: plotData.title
+          },
+          xaxis: {
+            title: "",
+            type: "category"
+          },
+          yaxis: {
+            {% if lang == "ca" %}
+              title: "Valor",
+            {% elif lang == "en" %}
+              title: "Value",
+            {% else %}
+              title: "Valor",
+            {% endif %}
+            automargin: true
+          },
+          margin: {
+            t: 70,
+            r: 30,
+            b: 120,
+            l: 85
+          },
+          hovermode: "closest",
+          legend: {
+            orientation: "h",
+            x: 0,
+            y: -0.22,
+            xanchor: "left",
+            yanchor: "top",
+            itemclick: false,
+            itemdoubleclick: false
+          }
+        },
+        {
+          responsive: true,
+          displaylogo: false
+        }
+      ).then(() => {
+        plotData.metrics.forEach((metric, traceIndex) => {
+          const label = document.createElement("label");
+          label.className = "metric-chip";
+
+          const checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+          checkbox.checked = true;
+          checkbox.dataset.traceIndex = String(traceIndex);
+
+          const text = document.createElement("span");
+          text.textContent = metric.name;
+
+          checkbox.addEventListener("change", () => {
+            Plotly.restyle(
+              plotElement,
+              {
+                visible: checkbox.checked
+              },
+              [traceIndex]
+            );
+          });
+
+          label.appendChild(checkbox);
+          label.appendChild(text);
+          metricList.appendChild(label);
+        });
+      });
+
+      function setAllMetricsVisible(visible) {
+        const checkboxes = Array.from(
+          metricList.querySelectorAll('input[type="checkbox"]')
+        );
+
+        checkboxes.forEach((checkbox, traceIndex) => {
+          checkbox.checked = visible;
+
+          Plotly.restyle(
+            plotElement,
+            {
+              visible: visible
+            },
+            [traceIndex]
+          );
+        });
+      }
+
+      selectAllButton.addEventListener("click", () => {
+        setAllMetricsVisible(true);
+      });
+
+      clearAllButton.addEventListener("click", () => {
+        setAllMetricsVisible(false);
+      });
+    {% endif %}
+  </script>
+</body>
+</html>

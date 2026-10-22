@@ -33,8 +33,8 @@ read_textgrid_file <- function(textgrid_file) {
     dplyr::filter(xmin != min(xmin) & xmax != max(xmax)) %>%
     mutate(text = text %>% str_squish() %>% str_to_lower()) %>%
     dplyr::filter(text != "") %>%
-    # Excluye las pausas largas (>300 ms) marcadas como "<p>" en el TextGrid de pataka.
-    # Estos intervalos se anotan pero no deben entrar en los cálculos V/C.
+    # Exclude long pauses (>300 ms) marked as "<p>" in the pataka TextGrid.
+    # These intervals are annotated but must not enter the V/C calculations.
     dplyr::filter(text != "<p>") %>%
     remove_constant(na.rm = FALSE) %>%
     mutate(num = dplyr::row_number()) %>%
@@ -161,7 +161,7 @@ analyze_asos <- function(textgrid_file) {
 args <- commandArgs(trailingOnly = TRUE)
 
 if (length(args) < 2) {
-  stop("Cal passar (1) la ruta al fitxer .TextGrid i (2) la ruta del .csv de sortida.")
+  stop("You must pass (1) the path to the .TextGrid file and (2) the path of the output .csv.")
 }
 
 textgrid_file <- args[1]
@@ -173,7 +173,7 @@ if (task == "pataka") {
 } else if (task == "asos") {
   df_textgrid <- analyze_asos(textgrid_file)
 } else {
-  stop(paste("Tasca desconeguda:", task))
+  stop(paste("Unknown task:", task))
 }
 
 write.csv(df_textgrid, file = csv_out, row.names = FALSE)

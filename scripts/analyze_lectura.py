@@ -215,7 +215,7 @@ def analyze_audio(audio_path: Path):
     speech_intervals, intensity, pitch = speech_intervals_from_audio(sound)
 
     if not speech_intervals:
-        raise RuntimeError("No se detectó habla suficiente en el audio.")
+        raise RuntimeError("Not enough speech detected in the audio.")
 
     voice_span = get_voice_span(speech_intervals)
     assert voice_span is not None
@@ -264,8 +264,8 @@ def analyze_audio(audio_path: Path):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--audio", required=True, help="Ruta al wav")
-    parser.add_argument("--out-csv", required=True, help="CSV resumen")
+    parser.add_argument("--audio", required=True, help="Path to the wav")
+    parser.add_argument("--out-csv", required=True, help="Summary CSV")
     args = parser.parse_args()
 
     audio_path = Path(args.audio)
@@ -274,7 +274,7 @@ def main():
     summary = analyze_audio(audio_path)
     write_summary_csv(out_csv, summary)
 
-    print(f"Resumen guardado en: {out_csv}")
+    print(f"Summary saved to: {out_csv}")
 
 
 if __name__ == "__main__":

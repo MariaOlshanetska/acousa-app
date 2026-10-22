@@ -424,3 +424,135 @@ details.upload-option{
   background: transparent;
   display: block;
 }
+
+/* Enlace a la web del proyecto desde logos y banners */
+.project-web-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.55rem;
+  color: #555;
+  text-decoration: none;
+  border-radius: 16px;
+}
+
+.project-web-link img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    opacity 0.18s ease;
+}
+
+.project-web-link:hover img {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.10);
+  opacity: 0.96;
+}
+
+.project-web-label {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.38rem 0.8rem;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 999px;
+  font-size: 0.88rem;
+  font-weight: 650;
+  line-height: 1;
+  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.05);
+}
+
+.project-web-link:hover .project-web-label {
+  color: #e56c47;
+  border-color: rgba(229, 108, 71, 0.35);
+}
+
+.project-web-link:focus-visible {
+  outline: 3px solid rgba(229, 108, 71, 0.45);
+  outline-offset: 5px;
+}
+
+/* Fondo de Recursos aplicado también a la comparativa */
+body.resources-page-background {
+  background:
+    linear-gradient(90deg, #c9b6ff 0%, #ffd7b8 100%) no-repeat;
+  background-size: 100% 220px;
+  background-color: #fff7f3;
+  min-height: 100vh;
+}
+
+/* Quitar el fondo antiguo de blobs en la comparativa */
+body.resources-page-background::before {
+  display: none;
+}
+
+/* ---------- Maquetación de la comparativa ---------- */
+
+.comparison-page {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+  min-height: 100vh;
+}
+
+.comparison-shell {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 18px;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.06);
+  padding: 1.2rem;
+  backdrop-filter: blur(6px);
+}
+
+.comparison-back {
+  display: inline-block;
+  color: #4b5563;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.comparison-title {
+  margin: 0.8rem 0 0;
+  font-size: 1.35rem;
+  font-weight: 750;
+}
+
+.comparison-intro {
+  margin: 0.35rem 0 0;
+  color: #666;
+  line-height: 1.4;
+}
+
+/* Tarjetas dentro de la comparativa */
+.comparison-shell .card {
+  width: 100%;
+  margin-top: 1rem;
+}
+
+/* Banner de la comparativa */
+.comparison-shell .banner {
+  margin-top: 1.5rem;
+}
+
+.comparison-shell .banner img {
+  width: min(460px, 70%);
+  max-width: 100%;
+  height: auto;
+}
+
+@media (max-width: 700px) {
+  .comparison-page {
+    padding: 1rem 0.75rem 2rem;
+  }
+
+  .comparison-shell {
+    padding: 1rem;
+  }
+
+  .comparison-shell .banner img {
+    width: min(460px, 90%);
+  }
+}

@@ -229,6 +229,7 @@ LANG_TEXTS = {'ca': {'app_title': 'AcousA - Anàlisi de la parla',
         'f0_mean': 'F0 mitjana',
         'f0_sd': 'Variabilitat de F0',
         'f0_range': 'Rang de F0',
+        'cpps_db': 'CPPS',
         },
 
         'lectura_norm_missing_file': "No s'ha trobat la taula de normalitat de lectura.",
@@ -268,10 +269,87 @@ LANG_TEXTS = {'ca': {'app_title': 'AcousA - Anàlisi de la parla',
               'jitter_pct': 'Jitter',
               'shimmer_pct': 'Shimmer',
               'hnr_db': 'HNR',
+              'cpps_db': 'CPPS',
               'voice_breaks_percent': 'Interrupcions de la fonació',
               'locally_unvoiced_percent': 'Trams sense sonoritat',
               'h1_h2': 'H1–H2',
               'h1_a1': 'H1–A1',
+              },
+        'asos_measure_help': {
+              'mpt': (
+                  "Temps màxim de fonació (MPT): durada, en segons, del tram de veu contínua "
+                  "detectat automàticament dins l’enregistrament. El sistema calcula la corba "
+                  "d’intensitat (finestra de 10 ms, mínim 75 Hz) i la suavitza; considera «actiu» "
+                  "cada instant que estigui a menys de 24 dB del pic d’intensitat i, alhora, sigui "
+                  "sonor segons la corba de to (autocorrelació, 75–500 Hz). El tram acaba quan "
+                  "s’acumulen uns 60 ms de silenci o de manca de sonoritat. Es tria el tram sonor "
+                  "més llarg (preferentment ≥ 3 s) i la seva durada és el MPT. Rang de referència: 15–30 s."
+              ),
+              'f0_mean_hz': (
+                  "Freqüència fonamental mitjana (to de la veu): mitjana aritmètica de la F0 sobre "
+                  "el tram sonor, calculada amb l’algorisme de to per autocorrelació de Praat "
+                  "(«To Pitch», sòl 75 Hz, sostre 600 Hz), en Hz. El rang de referència s’adapta al "
+                  "sexe/gènere indicat: dona 180–300 Hz, home 95–180 Hz; si no s’indica, 95–300 Hz. "
+                  "La F0 també es converteix a nota musical (A4 = 440 Hz)."
+              ),
+              'jitter_pct': (
+                  "Jitter (ppq5): variabilitat de curt termini de la durada dels cicles glòtics, és a "
+                  "dir, com de regular és el període d’un cicle al següent. Es mesura sobre els "
+                  "polsos glòtics («To PointProcess (periodic, cc)», 75–500 Hz) amb el quocient de "
+                  "pertorbació del període a 5 punts (període mínim 0,1 ms, màxim 20 ms, factor 1,3). "
+                  "El valor de Praat és una fracció que es multiplica per 100 per expressar-lo en %. "
+                  "Rang de referència: 0–0,4 %."
+              ),
+              'shimmer_pct': (
+                  "Shimmer (apq11): variabilitat de curt termini de l’amplitud dels cicles glòtics "
+                  "(com d’estable és el volum cicle a cicle). Es calcula sobre els mateixos polsos "
+                  "glòtics amb el quocient de pertorbació de l’amplitud a 11 punts (període 0,1–20 ms, "
+                  "factor de període 1,3, factor d’amplitud 1,6). El valor de Praat, una fracció, es "
+                  "multiplica per 100 per obtenir el %. Rang de referència: 0–5,33 %."
+              ),
+              'hnr_db': (
+                  "Relació harmònics-soroll (HNR): quantitat d’energia periòdica (harmònica) respecte "
+                  "de la de soroll, en dB; com més alt, més neta és la veu. Es calcula amb «To "
+                  "Harmonicity (cc)» (mètode de correlació creuada, pas de 10 ms, to mínim 75 Hz, "
+                  "llindar de silenci 0,1, 1 període per finestra) i se’n pren la mitjana sobre el tram. "
+                  "Rang de referència: 20–35 dB."
+              ),
+              'voice_breaks_percent': (
+                  "Interrupcions de la fonació: percentatge de la durada total ocupat per talls entre "
+                  "polsos glòtics. A partir dels polsos detectats es mesuren els intervals entre polsos "
+                  "consecutius; es compta com a «interrupció» tot interval més llarg d’1,25 períodes "
+                  "glòtics (llindar ≈ 1,25/75 s). Se sumen aquests intervals i es divideix per la durada "
+                  "del tram, en %. Rang de referència: 0–0,37 %."
+              ),
+              'locally_unvoiced_percent': (
+                  "Trams sense sonoritat: percentatge de finestres d’anàlisi de to en què no es detecta "
+                  "F0 (fragments sords o sense veu). Es calcula amb el detector de to per autocorrelació "
+                  "(75–600 Hz): es marca cada finestra sense F0 vàlida i es divideix pel total de "
+                  "finestres. Rang de referència: 0–5,03 %."
+              ),
+              'h1_h2': (
+                  "H1–H2: diferència d’amplitud (dB) entre el primer harmònic (H1, situat a la F0) i el "
+                  "segon (H2, a 2×F0). Sobre l’espectre FFT del tram es busca el pic d’amplitud dins "
+                  "d’una banda estreta (±6 % de la F0) al voltant de cada harmònic i se’n resta el "
+                  "nivell. Un H1–H2 alt s’associa a veu airejada. Rang de referència: −4,05 a 15,48 dB."
+              ),
+              'h1_a1': (
+                  "H1–A1 (versió corregida): diferència d’amplitud (dB) entre el primer harmònic (H1, a "
+                  "la F0) i l’harmònic més proper al primer formant (A1). Les freqüències objectiu "
+                  "s’obtenen al punt mitjà del tram (F0 i F1 amb «To Formant (burg)»). Les amplituds es "
+                  "llegeixen de l’espectre FFT i de l’envolupant LPC (finestra d’uns 30–80 ms) i es fa "
+                  "servir la versió corregida (FFT menys envolupant), acústicament més estable. "
+                  "Rang de referència: −20 a 5 dB. Nota: H1–A1 també s’ha relacionat amb la nasalitat, "
+                  "per la qual cosa s’ha d’interpretar conjuntament amb la resta de paràmetres."
+              ),
+              'cpps_db': (
+                  "CPPS (prominència suavitzada del pic cepstral): mesura global de la periodicitat i la "
+                  "qualitat de la veu, en dB; com més alt, més estable i clara és la veu. Es calcula amb "
+                  "Praat sobre el tram etiquetat (PowerCepstrogram: sòl 60 Hz, pas 0,002 s, freqüència "
+                  "màxima 5000 Hz, preèmfasi des de 50 Hz; «Get CPPS» amb finestres d’1 i 0,001 ms, "
+                  "rang de cerca 60–330 Hz, interpolació parabòlica, línia de tendència recta i ajust "
+                  "robust), seguint Murton, Hillman i Mehta (2020). Rang de referència: 17–21 dB."
+              ),
               },
         'mpt_reduced': "Capacitat de fonació reduïda, compatible amb debilitat vocal.",
         'mpt_slightly_reduced': "Capacitat de fonació lleugerament reduïda.",
@@ -309,6 +387,9 @@ LANG_TEXTS = {'ca': {'app_title': 'AcousA - Anàlisi de la parla',
         'no_relevant_alterations': "No s’han detectat alteracions rellevants en els paràmetres analitzats.",
         'f0_mean_with_note': "La teva freqüència mitjana és de {hz} Hz, cosa que equival a {note}.",
         'f0_mean': "La teva freqüència mitjana és de {hz} Hz.",
+        'project_web_link': "Web del projecte",
+        'project_web_aria': "Visitar la web del projecte AcousA",
+        'funding_notice': "Aquest web forma part del projecte AcousA, finançat pel MCIN/AEI amb referència PID2022-139004OA-I00.",
        },
  'es': {'app_title': 'AcousA - Análisis de voz',
         'page_title': 'AcousA - Análisis de voz',
@@ -540,6 +621,7 @@ LANG_TEXTS = {'ca': {'app_title': 'AcousA - Anàlisi de la parla',
               'f0_mean': 'F0 media',
               'f0_sd': 'Variabilidad de F0',
               'f0_range': 'Rango de F0',
+              'cpps_db': 'CPPS',
               },
 
         'lectura_norm_missing_file': 'No se ha encontrado la tabla de normalidad de lectura.',
@@ -579,10 +661,88 @@ LANG_TEXTS = {'ca': {'app_title': 'AcousA - Anàlisi de la parla',
               'jitter_pct': 'Jitter',
               'shimmer_pct': 'Shimmer',
               'hnr_db': 'HNR',
+              'cpps_db': 'CPPS',
               'voice_breaks_percent': 'Interrupciones de la fonación',
               'locally_unvoiced_percent': 'Tramos sin sonoridad',
               'h1_h2': 'H1–H2',
               'h1_a1': 'H1–A1',
+              },
+        'asos_measure_help': {
+              'mpt': (
+                  "Tiempo máximo de fonación (MPT): duración, en segundos, del tramo de voz continua "
+                  "detectado automáticamente en la grabación. El sistema calcula la curva de "
+                  "intensidad (ventana de 10 ms, mínimo 75 Hz) y la suaviza; considera «activo» cada "
+                  "instante que esté a menos de 24 dB del pico de intensidad y, a la vez, sea sonoro "
+                  "según la curva de tono (autocorrelación, 75–500 Hz). El tramo termina cuando se "
+                  "acumulan unos 60 ms de silencio o falta de sonoridad. Se elige el tramo sonoro más "
+                  "largo (preferentemente ≥ 3 s) y su duración es el MPT. Rango de referencia: 15–30 s."
+              ),
+              'f0_mean_hz': (
+                  "Frecuencia fundamental media (tono de la voz): media aritmética de la F0 sobre el "
+                  "tramo sonoro, calculada con el algoritmo de tono por autocorrelación de Praat "
+                  "(«To Pitch», suelo 75 Hz, techo 600 Hz), en Hz. El rango de referencia se adapta al "
+                  "sexo/género indicado: mujer 180–300 Hz, hombre 95–180 Hz; si no se indica, 95–300 Hz. "
+                  "La F0 también se convierte a nota musical (A4 = 440 Hz)."
+              ),
+              'jitter_pct': (
+                  "Jitter (ppq5): variabilidad a corto plazo de la duración de los ciclos glóticos, es "
+                  "decir, cómo de regular es el periodo de un ciclo al siguiente. Se mide sobre los "
+                  "pulsos glóticos («To PointProcess (periodic, cc)», 75–500 Hz) con el cociente de "
+                  "perturbación del periodo a 5 puntos (periodo mínimo 0,1 ms, máximo 20 ms, factor 1,3). "
+                  "El valor de Praat es una fracción que se multiplica por 100 para expresarlo en %. "
+                  "Rango de referencia: 0–0,4 %."
+              ),
+              'shimmer_pct': (
+                  "Shimmer (apq11): variabilidad a corto plazo de la amplitud de los ciclos glóticos "
+                  "(cómo de estable es el volumen ciclo a ciclo). Se calcula sobre los mismos pulsos "
+                  "glóticos con el cociente de perturbación de la amplitud a 11 puntos (periodo 0,1–20 ms, "
+                  "factor de periodo 1,3, factor de amplitud 1,6). El valor de Praat, una fracción, se "
+                  "multiplica por 100 para obtener el %. Rango de referencia: 0–5,33 %."
+              ),
+              'hnr_db': (
+                  "Relación armónicos-ruido (HNR): cantidad de energía periódica (armónica) respecto a la "
+                  "de ruido, en dB; cuanto más alto, más limpia es la voz. Se calcula con «To Harmonicity "
+                  "(cc)» (método de correlación cruzada, paso de 10 ms, tono mínimo 75 Hz, umbral de "
+                  "silencio 0,1, 1 periodo por ventana) y se toma la media sobre el tramo. "
+                  "Rango de referencia: 20–35 dB."
+              ),
+              'voice_breaks_percent': (
+                  "Interrupciones de la fonación: porcentaje de la duración total ocupado por cortes "
+                  "entre pulsos glóticos. A partir de los pulsos detectados se miden los intervalos entre "
+                  "pulsos consecutivos; se cuenta como «interrupción» todo intervalo más largo de 1,25 "
+                  "periodos glóticos (umbral ≈ 1,25/75 s). Se suman esos intervalos y se divide por la "
+                  "duración del tramo, en %. Rango de referencia: 0–0,37 %."
+              ),
+              'locally_unvoiced_percent': (
+                  "Tramos sin sonoridad: porcentaje de ventanas de análisis de tono en las que no se "
+                  "detecta F0 (fragmentos sordos o sin voz). Se calcula con el detector de tono por "
+                  "autocorrelación (75–600 Hz): se marca cada ventana sin F0 válida y se divide por el "
+                  "total de ventanas. Rango de referencia: 0–5,03 %."
+              ),
+              'h1_h2': (
+                  "H1–H2: diferencia de amplitud (dB) entre el primer armónico (H1, situado en la F0) y "
+                  "el segundo (H2, en 2×F0). Sobre el espectro FFT del tramo se busca el pico de amplitud "
+                  "dentro de una banda estrecha (±6 % de la F0) alrededor de cada armónico y se resta el "
+                  "nivel. Un H1–H2 alto se asocia a voz aireada. Rango de referencia: −4,05 a 15,48 dB."
+              ),
+              'h1_a1': (
+                  "H1–A1 (versión corregida): diferencia de amplitud (dB) entre el primer armónico (H1, "
+                  "en la F0) y el armónico más cercano al primer formante (A1). Las frecuencias objetivo "
+                  "se obtienen en el punto medio del tramo (F0 y F1 con «To Formant (burg)»). Las "
+                  "amplitudes se leen del espectro FFT y de la envolvente LPC (ventana de unos 30–80 ms) "
+                  "y se usa la versión corregida (FFT menos envolvente), acústicamente más estable. "
+                  "Rango de referencia: −20 a 5 dB. Nota: H1–A1 también se ha relacionado con la "
+                  "nasalidad, por lo que debe interpretarse junto con el resto de parámetros."
+              ),
+              'cpps_db': (
+                  "CPPS (prominencia suavizada del pico cepstral): medida global de la periodicidad y la "
+                  "calidad de la voz, en dB; cuanto más alto, más estable y clara es la voz. Se calcula "
+                  "con Praat sobre el tramo etiquetado (PowerCepstrogram: suelo 60 Hz, paso 0,002 s, "
+                  "frecuencia máxima 5000 Hz, preénfasis desde 50 Hz; «Get CPPS» con ventanas de 1 y "
+                  "0,001 ms, rango de búsqueda 60–330 Hz, interpolación parabólica, línea de tendencia "
+                  "recta y ajuste robusto), siguiendo a Murton, Hillman y Mehta (2020). "
+                  "Rango de referencia: 17–21 dB."
+              ),
               },
         'mpt_reduced': "Capacidad de fonación reducida, compatible con debilidad vocal.",
         'mpt_slightly_reduced': "Capacidad de fonación ligeramente reducida.",
@@ -619,6 +779,9 @@ LANG_TEXTS = {'ca': {'app_title': 'AcousA - Anàlisi de la parla',
         'no_relevant_alterations': "No se han detectado alteraciones relevantes en los parámetros analizados.",
         'f0_mean_with_note': "Tu frecuencia media es de {hz} Hz, lo que equivale a {note}.",
         'f0_mean': "Tu frecuencia media es de {hz} Hz.",
+        'project_web_link': "Web del proyecto",
+        'project_web_aria': "Visitar la web del proyecto AcousA",
+        'funding_notice': "Este sitio web forma parte del proyecto AcousA, financiado por el MCIN/AEI con referencia PID2022-139004OA-I00.",
        },
  'en': {'app_title': 'AcousA - Speech analysis',
         'page_title': 'AcousA - Speech analysis',
@@ -843,6 +1006,7 @@ LANG_TEXTS = {'ca': {'app_title': 'AcousA - Anàlisi de la parla',
               'f0_mean': 'Mean F0',
               'f0_sd': 'F0 variability',
               'f0_range': 'F0 range',
+              'cpps_db': 'CPPS',
               },
 
         'lectura_norm_missing_file': 'The reading normality table was not found.',
@@ -882,10 +1046,89 @@ LANG_TEXTS = {'ca': {'app_title': 'AcousA - Anàlisi de la parla',
               'jitter_pct': 'Jitter',
               'shimmer_pct': 'Shimmer',
               'hnr_db': 'HNR',
+              'cpps_db': 'CPPS',
               'voice_breaks_percent': 'Voice breaks',
               'locally_unvoiced_percent': 'Locally unvoiced',
               'h1_h2': 'H1–H2',
               'h1_a1': 'H1–A1',
+              },
+        'asos_measure_help': {
+              'mpt': (
+                  "Maximum phonation time (MPT): duration, in seconds, of the continuous voiced "
+                  "segment automatically detected in the recording. The system computes the intensity "
+                  "curve (10 ms window, minimum 75 Hz) and smooths it; a moment is considered «active» "
+                  "when it is within 24 dB of the intensity peak and, at the same time, voiced "
+                  "according to the pitch curve (autocorrelation, 75–500 Hz). The segment ends after "
+                  "about 60 ms of accumulated silence or unvoicing. The longest voiced segment is "
+                  "chosen (preferably ≥ 3 s) and its duration is the MPT. Reference range: 15–30 s."
+              ),
+              'f0_mean_hz': (
+                  "Mean fundamental frequency (voice pitch): arithmetic mean of F0 over the voiced "
+                  "segment, computed with Praat's autocorrelation pitch algorithm («To Pitch», floor "
+                  "75 Hz, ceiling 600 Hz), in Hz. The reference range adapts to the reported "
+                  "sex/gender: women 180–300 Hz, men 95–180 Hz; if not reported, 95–300 Hz. F0 is also "
+                  "converted to a musical note (A4 = 440 Hz)."
+              ),
+              'jitter_pct': (
+                  "Jitter (ppq5): short-term variability of the duration of the glottal cycles, i.e. how "
+                  "regular the period is from one cycle to the next. It is measured on the glottal "
+                  "pulses («To PointProcess (periodic, cc)», 75–500 Hz) using the 5-point period "
+                  "perturbation quotient (minimum period 0.1 ms, maximum 20 ms, factor 1.3). Praat "
+                  "returns a fraction, which is multiplied by 100 to express it as %. "
+                  "Reference range: 0–0.4 %."
+              ),
+              'shimmer_pct': (
+                  "Shimmer (apq11): short-term variability of the amplitude of the glottal cycles (how "
+                  "stable the loudness is from cycle to cycle). It is computed on the same glottal "
+                  "pulses using the 11-point amplitude perturbation quotient (period 0.1–20 ms, period "
+                  "factor 1.3, amplitude factor 1.6). Praat's value, a fraction, is multiplied by 100 to "
+                  "obtain the %. Reference range: 0–5.33 %."
+              ),
+              'hnr_db': (
+                  "Harmonics-to-noise ratio (HNR): amount of periodic (harmonic) energy relative to "
+                  "noise energy, in dB; the higher it is, the cleaner the voice. It is computed with "
+                  "«To Harmonicity (cc)» (cross-correlation method, 10 ms step, minimum pitch 75 Hz, "
+                  "silence threshold 0.1, 1 period per window) and averaged over the segment. "
+                  "Reference range: 20–35 dB."
+              ),
+              'voice_breaks_percent': (
+                  "Phonation breaks: percentage of the total duration occupied by gaps between glottal "
+                  "pulses. From the detected pulses, the intervals between consecutive pulses are "
+                  "measured; any interval longer than 1.25 glottal periods (threshold ≈ 1.25/75 s) "
+                  "counts as a «break». These intervals are summed and divided by the segment "
+                  "duration, in %. Reference range: 0–0.37 %."
+              ),
+              'locally_unvoiced_percent': (
+                  "Unvoiced portions: percentage of pitch-analysis windows in which no F0 is detected "
+                  "(voiceless or non-voiced fragments). It is computed with the autocorrelation pitch "
+                  "detector (75–600 Hz): each window without a valid F0 is flagged and divided by the "
+                  "total number of windows. Reference range: 0–5.03 %."
+              ),
+              'h1_h2': (
+                  "H1–H2: amplitude difference (dB) between the first harmonic (H1, at F0) and the "
+                  "second (H2, at 2×F0). On the FFT spectrum of the segment, the peak amplitude is "
+                  "searched within a narrow band (±6 % of F0) around each harmonic and the levels are "
+                  "subtracted. A high H1–H2 is associated with a breathy voice. "
+                  "Reference range: −4.05 to 15.48 dB."
+              ),
+              'h1_a1': (
+                  "H1–A1 (corrected version): amplitude difference (dB) between the first harmonic (H1, "
+                  "at F0) and the harmonic closest to the first formant (A1). The target frequencies are "
+                  "obtained at the segment midpoint (F0 and F1 with «To Formant (burg)»). The amplitudes "
+                  "are read from the FFT spectrum and from the LPC envelope (window of about 30–80 ms), "
+                  "and the corrected version (FFT minus envelope) is used, which is acoustically more "
+                  "stable. Reference range: −20 to 5 dB. Note: H1–A1 has also been linked to nasality, "
+                  "so it should be interpreted together with the other parameters."
+              ),
+              'cpps_db': (
+                  "CPPS (smoothed cepstral peak prominence): overall measure of the periodicity and "
+                  "quality of the voice, in dB; the higher it is, the more stable and clear the voice. "
+                  "It is computed with Praat over the labeled segment (PowerCepstrogram: floor 60 Hz, "
+                  "step 0.002 s, maximum frequency 5000 Hz, pre-emphasis from 50 Hz; «Get CPPS» with 1 "
+                  "and 0.001 ms windows, search range 60–330 Hz, parabolic interpolation, straight trend "
+                  "line and robust fit), following Murton, Hillman and Mehta (2020). "
+                  "Reference range: 17–21 dB."
+              ),
               },
         'mpt_reduced': "Reduced phonation capacity, compatible with vocal weakness.",
         'mpt_slightly_reduced': "Slightly reduced phonation capacity.",
@@ -922,7 +1165,9 @@ LANG_TEXTS = {'ca': {'app_title': 'AcousA - Anàlisi de la parla',
         'no_relevant_alterations': "No relevant alterations were detected in the analysed parameters.",
         'f0_mean_with_note': "Your mean frequency is {hz} Hz, which corresponds to {note}.",
         'f0_mean': "Your mean frequency is {hz} Hz.",
-        
+        'project_web_link': "Project website",
+        'project_web_aria': "Visit the AcousA project website",
+        'funding_notice': "This website is part of the AcousA project, funded by MCIN/AEI/10.13039/501100011033 under grant PID2022-139004OA-I00.",
        }}
 
 

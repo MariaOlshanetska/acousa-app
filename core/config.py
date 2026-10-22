@@ -23,7 +23,7 @@ FFMPEG_CMD = cmd("ffmpeg", "FFMPEG_CMD")
 MFA_CMD = os.getenv("MFA_CMD", "/srv/labfon/conda_envs/mfa/bin/mfa")
 PYTHON_CMD = sys.executable
 
-BASE_DIR = Path(__file__).resolve().parent.parent  # raíz del proyecto
+BASE_DIR = Path(__file__).resolve().parent.parent  # project root
 UPLOAD_DIR = BASE_DIR / "uploads"
 RESULTS_DIR = BASE_DIR / "results"
 SCRIPTS_DIR = BASE_DIR / "scripts"

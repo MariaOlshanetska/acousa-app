@@ -177,7 +177,7 @@
   </style>
 </head>
 
-<body>
+<body class="resources-page-background">
   <div class="page">
     <div class="shell">
 
@@ -230,8 +230,62 @@
         </div>
       {% endfor %}
 
-      <div class="banner" style="margin-top:1.5rem;">
-        <img src="/static/Banner.png" alt="Banner">
+
+      <div class="section">
+        {% if lang == "ca" %}
+          <h2>Comparativa d'anàlisis</h2>
+        {% elif lang == "en" %}
+          <h2>Analysis comparison</h2>
+        {% else %}
+          <h2>Comparativa de análisis</h2>
+        {% endif %}
+
+        <div class="grid">
+          <a
+            class="res-card c-blue"
+            href="/recursos/comparativa?lang={{ lang }}"
+          >
+            <div class="res-icon" aria-hidden="true">📈</div>
+
+            <div>
+              {% if lang == "ca" %}
+                <div class="res-title">Comparar resultats</div>
+                <div class="res-desc">
+                  Puja entre 2 i 5 fitxers CSV de la mateixa tasca i visualitza
+                  com han canviat les mesures al llarg del temps.
+                </div>
+              {% elif lang == "en" %}
+                <div class="res-title">Compare results</div>
+                <div class="res-desc">
+                  Upload between 2 and 5 CSV files from the same task and
+                  visualise how the measures have changed over time.
+                </div>
+              {% else %}
+                <div class="res-title">Comparar resultados</div>
+                <div class="res-desc">
+                  Sube entre 2 y 5 archivos CSV de la misma tarea y visualiza
+                  cómo han cambiado las medidas a lo largo del tiempo.
+                </div>
+              {% endif %}
+            </div>
+          </a>
+        </div>
+      </div>
+
+      <div class="banner">
+        <a
+          href="https://www.ub.edu/phoneticslaboratory/sites/acousa/"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="project-web-link"
+          aria-label="{{ ui.project_web_aria }}"
+        >
+          <img src="/static/Banner.png" alt="AcousA">
+
+          <span class="project-web-label">
+            {{ ui.project_web_link }} ↗
+          </span>
+        </a>
       </div>
 
     </div>

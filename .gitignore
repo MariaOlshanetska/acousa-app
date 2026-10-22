@@ -11,6 +11,12 @@ shiny_apps/
 results/
 uploads/
 tmp_tfg_mails/
+ASOS/
+
+# Grabaciones individuales y anotaciones — nunca al repositorio
+*.wav
+*.mp3
+*.TextGrid
 
 # Entorno virtual Python
 .venv/

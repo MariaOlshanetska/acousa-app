@@ -9,19 +9,19 @@ import math
 
 from core.config import UPLOAD_DIR, RESULTS_DIR
 
-# --- límites de retención (máx. "grabaciones"/grupos) ---
+# --- retention limits (max. "recordings"/groups) ---
 MAX_AUDIO_ITEMS = 100
 MAX_TEXTGRID_ITEMS = 100
 
 MIN_DURATION_SEC = 3.0
 MIN_INTENSITY_RANGE_DB = 30.0
 
-# --- extensiones que queremos considerar ---
+# --- extensions we want to consider ---
 AUDIO_EXTS = {".wav", ".mp3", ".ogg", ".webm", ".m4a", ".mp4"}
 RESULT_EXTS = {".csv", ".png", ".TextGrid", ".txt", ".json", ".wav"}
 
 def _group_key_for_upload(p: Path) -> str:
-    # agrupa por el stem (uuid), así borra original+wav juntos
+    # group by the stem (uuid), so original+wav are deleted together
     return p.stem
 
 def _group_key_for_results(p: Path) -> str:
@@ -33,9 +33,9 @@ def _group_key_for_results(p: Path) -> str:
 
 def audio_duration_and_intensity_range_db(wav_path: Path, frame_ms: int = 20, hop_ms: int = 10):
     """
-    Devuelve:
-      - duration_sec: duración en segundos
-      - range_db: (p95 - p5) del RMS en dBFS por ventanas (aprox. contraste voz–fondo)
+    Returns:
+      - duration_sec: duration in seconds
+      - range_db: (p95 - p5) of the RMS in dBFS per window (approx. voice-background contrast)
     """
     with wave.open(str(wav_path), "rb") as wf:
         n_channels = wf.getnchannels()
@@ -48,16 +48,16 @@ def audio_duration_and_intensity_range_db(wav_path: Path, frame_ms: int = 20, ho
     if nframes == 0 or sr == 0:
         return duration_sec, 0.0
 
-    # Decodificación según sample width típico
+    # Decode according to typical sample width
     if sampwidth == 2:
         x = np.frombuffer(raw, dtype=np.int16).astype(np.float32) / 32768.0
     elif sampwidth == 4:
         x = np.frombuffer(raw, dtype=np.int32).astype(np.float32) / 2147483648.0
     elif sampwidth == 1:
-        # 8-bit suele ser unsigned
+        # 8-bit is usually unsigned
         x = (np.frombuffer(raw, dtype=np.uint8).astype(np.float32) - 128.0) / 128.0
     else:
-        # formato raro → no bloqueamos por intensidad, solo por duración
+        # unusual format -> do not block by intensity, only by duration
         return duration_sec, 999.0
 
     if n_channels > 1:
@@ -78,7 +78,7 @@ def audio_duration_and_intensity_range_db(wav_path: Path, frame_ms: int = 20, ho
         return duration_sec, 0.0
 
     rms_db = np.array(rms_db, dtype=np.float32)
-    rms_db = np.maximum(rms_db, -80.0)  # suelo para evitar -inf por silencios
+    rms_db = np.maximum(rms_db, -80.0)  # floor to avoid -inf from silences
 
     hi = float(np.percentile(rms_db, 95))
     lo = float(np.percentile(rms_db, 5))
@@ -93,8 +93,8 @@ def prune_dir_by_groups(
     delete_extra_patterns_fn=None,
 ):
     """
-    Mantiene como máximo 'max_groups' grupos (grabaciones) en dir_path.
-    Si se supera, borra el grupo más viejo (según mtime más reciente del grupo).
+    Keeps at most 'max_groups' groups (recordings) in dir_path.
+    If exceeded, deletes the oldest group (based on the group's most recent mtime).
     """
     if max_groups <= 0 or not dir_path.exists():
         return
@@ -107,13 +107,13 @@ def prune_dir_by_groups(
     for p in files:
         groups[group_key_fn(p)].append(p)
 
-    # Ordenar grupos por "recencia": mtime máximo dentro de cada grupo
+    # Sort groups by "recency": maximum mtime within each group
     def group_mtime(key: str) -> float:
         return max(x.stat().st_mtime for x in groups[key])
 
     keys_sorted = sorted(groups.keys(), key=group_mtime, reverse=True)
 
-    # Mantener los N más recientes; borrar el resto
+    # Keep the N most recent; delete the rest
     to_delete_keys = keys_sorted[max_groups:]
 
     for key in to_delete_keys:
@@ -123,7 +123,7 @@ def prune_dir_by_groups(
             except Exception:
                 pass
 
-        # Por si quieres borrar también derivados con patrones extra
+        # In case you also want to delete derived files with extra patterns
         if delete_extra_patterns_fn is not None:
             for p in delete_extra_patterns_fn(key):
                 try:
@@ -143,7 +143,7 @@ def prune_uploads():
 
 def prune_results():
     def extra_patterns(stem: str) -> Iterable[Path]:
-        # Borra derivados típicos (por si algún sufijo no entra en RESULT_EXTS o cambia el nombre)
+        # Delete typical derived files (in case a suffix is not in RESULT_EXTS or the name changes)
         yield RESULTS_DIR / f"{stem}_analysis.csv"
         yield RESULTS_DIR / f"{stem}_normalitat.png"
         yield RESULTS_DIR / f"{stem}_transcript.txt"
@@ -181,7 +181,7 @@ def csv_to_data_uri(p: Path) -> str:
     return f"data:text/csv;charset=utf-8;base64,{b64}"
 
 def clean_label(s: str) -> str:
-    # arregla el “â€“” típico de encoding mal interpretado
+    # fixes the typical "â€“" from misinterpreted encoding
     return (s or "").replace("â€“", "–").replace("â€”", "—")
 
 def to_float(x):
@@ -200,8 +200,8 @@ _NOTE_NAMES = {
 
 def hz_to_note_label(f_hz: float, lang: str = "es") -> str:
     """
-    Convierte frecuencia (Hz) a nota temperada (A4=440).
-    Devuelve p.ej. "La3 (A3)" en es/ca, o "A3" en en.
+    Converts a frequency (Hz) to an equal-tempered note (A4=440).
+    Returns e.g. "La3 (A3)" in es/ca, or "A3" in en.
     """
     if f_hz is None or f_hz <= 0:
         return ""

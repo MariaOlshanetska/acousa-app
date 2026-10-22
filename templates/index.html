@@ -811,6 +811,20 @@
       color: #000000;
       border-bottom-color: #000000;
     }
+
+    .funding-notice{
+      margin:1.3rem auto 0;
+      max-width:620px;
+      padding:.95rem 1.3rem;
+      background:#fffaf8;
+      border:1px solid rgba(0,0,0,.06);
+      border-radius:14px;
+      box-shadow:0 8px 18px rgba(0,0,0,.04);
+      color:#666;
+      font-size:.9rem;
+      line-height:1.55;
+      text-align:center;
+    }
   </style>
 </head>
 <body>
@@ -1038,8 +1052,24 @@
 
     <!-- Banner fijo -->
     <div class="banner">
-      <img src="/static/Banner.png" alt="AcousA banner">
+      <a
+        href="https://www.ub.edu/phoneticslaboratory/sites/acousa/"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="project-web-link"
+        aria-label="{{ ui.project_web_aria }}"
+      >
+        <img src="/static/Banner.png" alt="AcousA">
+
+        <span class="project-web-label">
+          {{ ui.project_web_link }} ↗
+        </span>
+      </a>
     </div>
+
+    <p class="funding-notice">
+      {{ ui.funding_notice if ui.funding_notice is defined else "This website is part of the AcousA project, funded by MCIN/AEI/10.13039/501100011033 under grant PID2022-139004OA-I00." }}
+    </p>
 
   </div>
 
