@@ -3,6 +3,8 @@ import os
 import sys
 import shutil
 
+from fastapi import HTTPException
+from fastapi.responses import FileResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 
@@ -36,5 +38,32 @@ def init_app(app):
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
     app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
-    app.mount("/results", StaticFiles(directory=str(RESULTS_DIR)), name="results")
+
+    # Abans aquí hi havia un muntatge estàtic de /results que servia QUALSEVOL fitxer per URL
+    # directa, inclosos els .wav. Això feia inútil el token: qualsevol tercer amb l'enllaç podia
+    # obrir /results/<stem>.wav i baixar-se l'àudio biomètric. Ara servim /results amb una ruta
+    # pròpia que deixa passar CSV, TextGrid i .txt però BLOQUEJA els .wav; l'àudio només surt per
+    # la ruta protegida d'un sol ús (/clinica/results/{rid}/audio).
+    results_root = RESULTS_DIR.resolve()
+
+    @app.get("/results/{file_path:path}", name="results")
+    async def results_file(file_path: str):
+        target = (RESULTS_DIR / file_path).resolve()
+
+        # Protecció contra path traversal: el fitxer demanat ha d'estar dins de RESULTS_DIR.
+        # Motiu de seguretat: evitem que algú surti del directori (p. ex. ../core/config.py).
+        if not target.is_relative_to(results_root):
+            raise HTTPException(status_code=404)
+
+        # Mai servim .wav per aquesta via: l'àudio biomètric només és accessible amb el token
+        # d'un sol ús. Qualsevol intent d'obtenir un .wav directament retorna 404.
+        if target.suffix.lower() == ".wav":
+            raise HTTPException(status_code=404)
+
+        if not target.is_file():
+            raise HTTPException(status_code=404)
+
+        # CSV, TextGrid i .txt segueixen baixant-se exactament com abans.
+        return FileResponse(str(target))
+
     app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")

@@ -3,8 +3,11 @@ from __future__ import annotations
 
 import base64
 import csv
+import hashlib
+import hmac
 import json
 import re
+import secrets
 import shutil
 import subprocess
 import uuid
@@ -14,8 +17,14 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
-from fastapi import APIRouter, File, Form, Request, UploadFile
-from fastapi.responses import HTMLResponse, RedirectResponse
+# secrets/hashlib/hmac: generem i verifiquem el token d'un sol ús per baixar l'àudio.
+# El motiu de seguretat: l'àudio és una dada biomètrica, així que no pot quedar accessible
+# per URL directa; només qui acaba de gravar rep el token i només el pot fer servir un cop.
+# Query -> llegir el token des de la query string; HTTPException -> retornar 403/404 quan
+# el token no és vàlid o ja s'ha fet servir; FileResponse -> servir el .wav amb
+# Content-Disposition: attachment únicament des de la ruta protegida.
+from fastapi import APIRouter, File, Form, HTTPException, Query, Request, UploadFile
+from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 
 from core.config import (
     FFMPEG_CMD,
@@ -1758,7 +1767,12 @@ def _prepare_downloads(
             wav_copy = RESULTS_DIR / audio_name
             if wav_path.resolve() != wav_copy.resolve():
                 shutil.copy2(wav_path, wav_copy)
-            audio_href = f"/results/{wav_copy.name}"
+            # Conservem el .wav al disc perquè la ruta protegida d'un sol ús el pugui
+            # servir, però NO en tornem cap href estàtic (/results/....wav).
+            # Motiu de seguretat: l'àudio biomètric només ha de sortir per la ruta amb
+            # token; si tornéssim la URL estàtica, qualsevol tercer amb l'enllaç la podria
+            # obrir directament i el token no serviria de res.
+            audio_href = None
         else:
             audio_href = None
             audio_name = None
@@ -1766,7 +1780,11 @@ def _prepare_downloads(
         return csv_href, csv_name, audio_href, audio_name
 
     csv_href = _csv_to_data_uri(csv_path) if csv_path.exists() else None
-    audio_href = _file_to_data_uri(wav_path, "audio/wav") if wav_path and wav_path.exists() else None
+    # No incrustem mai l'àudio com a data: URI dins la pàgina.
+    # Motiu de seguretat: un enllaç compartible no ha de dur mai l'àudio biomètric;
+    # si l'incrustéssim, qualsevol que veiés la pàgina de resultats el podria baixar.
+    # L'àudio només flueix per la ruta protegida amb token d'un sol ús.
+    audio_href = None
 
     if not (wav_path and wav_path.exists()):
         audio_name = None
@@ -1827,6 +1845,27 @@ def _load_meta(rid: str) -> dict[str, Any] | None:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def _new_audio_token() -> str:
+    # Token aleatori i criptogràficament segur per baixar l'àudio biomètric.
+    # Motiu de seguretat: ha de ser impossible d'endevinar, perquè és l'única clau
+    # que permet baixar el .wav. Qui no tingui aquest token no pot accedir a l'àudio.
+    return secrets.token_urlsafe(32)
+
+
+def _hash_audio_token(token: str) -> str:
+    # A la meta JSON només hi desem el HASH del token, mai el token en clar.
+    # Motiu de seguretat: si algú arriba a llegir els fitxers de metadades, no ha de
+    # poder reconstruir el token ni, per tant, baixar l'àudio biomètric.
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
+
+
+def _audio_token_matches(stored_hash: str, provided: str) -> bool:
+    # Comparació en temps constant (hmac.compare_digest) per evitar atacs de timing.
+    # Motiu de seguretat: una comparació normal (==) podria filtrar informació sobre el
+    # token a través del temps de resposta; compare_digest no depèn del contingut.
+    return hmac.compare_digest(stored_hash, _hash_audio_token(provided))
+
+
 def _build_index_context(request: Request, lang: str, task: str | None = None, error_message: str | None = None) -> dict[str, Any]:
     ui, lang = get_texts(lang)
     tasks = [{"id": task_id, "label": cfg["label"][lang]} for task_id, cfg in TASKS.items()]
@@ -1850,7 +1889,15 @@ async def index(request: Request, lang: str = DEFAULT_LANG):
 
 
 @router.get("/results/{rid}", response_class=HTMLResponse)
-async def show_results(request: Request, rid: str, lang: str = DEFAULT_LANG):
+async def show_results(
+    request: Request,
+    rid: str,
+    lang: str = DEFAULT_LANG,
+    # dl: token en clar que només porta la URL de redirecció cap a qui acaba de gravar.
+    # L'enllaç compartible no el duu mai, així que per defecte dl és None i el botó d'àudio
+    # no apareix.
+    dl: str | None = Query(default=None),
+):
     ui, lang = get_texts(lang)
     payload = _load_meta(rid)
     if not payload:
@@ -1868,7 +1915,70 @@ async def show_results(request: Request, rid: str, lang: str = DEFAULT_LANG):
     payload["ui"] = ui
     payload["lang"] = lang
     payload["lang_switch_url"] = f"/clinica/results/{rid}"
+
+    # Només construïm un botó de descàrrega d'àudio funcional quan es compleixen TOTES les
+    # condicions: hi ha un token (dl), la meta té un hash de token (no és un resultat antic),
+    # el token encara no s'ha fet servir i el token coincideix amb el hash desat.
+    # Motiu de seguretat: la ruta compartible mai ha de fabricar un token; per defecte el botó
+    # és absent, de manera que un tercer pot veure els resultats però no baixar l'àudio
+    # biomètric. Els resultats antics (sense hash) tampoc mostren mai el botó.
+    audio_token_hash = payload.get("audio_token_hash")
+    if (
+        dl
+        and audio_token_hash
+        and not payload.get("audio_token_used")
+        and _audio_token_matches(audio_token_hash, dl)
+    ):
+        payload["audio_download_url"] = f"/clinica/results/{rid}/audio?token={dl}"
+    else:
+        payload["audio_download_url"] = None
+
     return templates.TemplateResponse("results.html", payload)
+
+
+@router.get("/results/{rid}/audio")
+async def download_audio(rid: str, token: str = Query(...)):
+    # Ruta protegida i d'un sol ús per baixar l'àudio biomètric (.wav).
+    # Motiu de seguretat global: l'àudio és una dada biomètrica; no es pot servir per URL
+    # directa ni quedar accessible a qui tingui l'enllaç compartible. Només qui va gravar,
+    # amb el token que va rebre a la redirecció, el pot baixar, i només una vegada.
+    payload = _load_meta(rid)
+    if not payload:
+        raise HTTPException(status_code=404)
+
+    audio_token_hash = payload.get("audio_token_hash")
+    # Resultats antics (sense hash de token): mai no es pot baixar l'àudio -> 403.
+    if not audio_token_hash:
+        raise HTTPException(status_code=403)
+
+    # Ús estricte d'un sol cop: si el token ja s'ha consumit, bloquegem -> 403.
+    if payload.get("audio_token_used"):
+        raise HTTPException(status_code=403)
+
+    # Comparació en temps constant; token incorrecte o absent -> 403.
+    if not _audio_token_matches(audio_token_hash, token):
+        raise HTTPException(status_code=403)
+
+    # Localitzem el .wav al disc a partir de l'audio_stem desat a la meta.
+    audio_stem = payload.get("audio_stem")
+    if not audio_stem:
+        raise HTTPException(status_code=404)
+    wav_file = RESULTS_DIR / f"{audio_stem}.wav"
+    if not wav_file.exists():
+        raise HTTPException(status_code=404)
+
+    # Cremem el token ABANS de servir el fitxer i persistim la meta.
+    # Motiu de seguretat: si la connexió es talla a mig enviament, un reintent amb el mateix
+    # token ha de fallar; així garantim que l'àudio biomètric només es pot baixar una vegada.
+    payload["audio_token_used"] = True
+    _save_meta(rid, payload)
+
+    # FileResponse amb filename= afegeix Content-Disposition: attachment, forçant la descàrrega.
+    return FileResponse(
+        path=str(wav_file),
+        media_type="audio/wav",
+        filename=payload.get("audio_download_name") or f"{rid}.wav",
+    )
 
 
 @router.post("/analyze", response_class=HTMLResponse)
@@ -2067,6 +2177,17 @@ async def analyze(
             )
 
         rid = uuid.uuid4().hex
+
+        # Generem el token d'un sol ús només quan l'àudio es conserva al disc (store_data)
+        # i realment hi ha un .wav. Motiu de seguretat: el token és l'única via per baixar
+        # l'àudio biomètric i només qui acaba de gravar el rebrà (a la URL de redirecció);
+        # quan no es conserva l'àudio no hi ha token ni botó de descàrrega.
+        audio_token = (
+            _new_audio_token()
+            if store_data and wav_path and wav_path.exists()
+            else None
+        )
+
         raw_rows = _read_csv_rows_for_template(csv_path)
         row_groups: list[dict[str, Any]] = []
         hl_norms_table_name = ""
@@ -2270,8 +2391,17 @@ async def analyze(
             "f0_summary_text": f0_summary_text,
             "csv_data_uri": csv_href,
             "csv_download_name": csv_name,
-            "audio_download_url": audio_href,
+            # Mai desem una URL d'àudio utilitzable a la meta JSON.
+            # Motiu de seguretat: la meta es carrega també per a l'enllaç compartible, i aquest
+            # no ha de dur mai una via directa de descàrrega de l'àudio biomètric.
+            "audio_download_url": None,
             "audio_download_name": audio_name,
+            # Només desem el HASH del token, mai el token en clar, i marquem que encara no
+            # s'ha fet servir. audio_stem permet localitzar el .wav al disc de forma
+            # determinista des de la ruta protegida (RESULTS_DIR / f"{audio_stem}.wav").
+            "audio_token_hash": _hash_audio_token(audio_token) if audio_token else None,
+            "audio_token_used": False,
+            "audio_stem": stem,
             "textgrid_download_url": textgrid_href,
             "textgrid_download_name": textgrid_name,
             "transcription_text": transcription_text,
@@ -2293,6 +2423,15 @@ async def analyze(
         if store_data:
             prune_results()
 
+        # El token en clar viatja una sola vegada, a la URL de redirecció cap a qui acaba de
+        # gravar. Motiu de seguretat: així només el pacient/logopeda que ha fet la prova rep la
+        # via de descàrrega; l'enllaç compartible (sense ?dl) mai conté el token, de manera que
+        # un tercer pot veure els resultats però no baixar l'àudio biomètric.
+        if audio_token:
+            return RedirectResponse(
+                url=f"/clinica/results/{rid}?lang={lang}&dl={audio_token}",
+                status_code=303,
+            )
         return RedirectResponse(url=f"/clinica/results/{rid}?lang={lang}", status_code=303)
 
     except subprocess.CalledProcessError as e:
