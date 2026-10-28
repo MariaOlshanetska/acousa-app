@@ -1651,7 +1651,11 @@ def _build_dsi_payload(row0: dict[str, Any], ui) -> dict[str, Any]:
 
 
 def _build_asos_rows(csv_path: Path, gender_value: str | None, ui) -> tuple[list[dict[str, Any]], str, str, str, dict[str, Any]]:
-    df = pd.read_csv(csv_path, sep=None, engine="python")
+    # encoding="utf-8-sig": el CSV l'escriu R (write_csv) amb un BOM UTF-8 al davant. Sense
+    # això, el nom de la primera columna arriba com a "\ufeffmpt" i row0.get("mpt") torna None,
+    # cosa que deixava el DSI com a "no disponible" tot i tenir totes les mesures. Amb utf-8-sig
+    # pandas elimina el BOM i la clau "mpt" (i la resta) es llegeixen correctament.
+    df = pd.read_csv(csv_path, sep=None, engine="python", encoding="utf-8-sig")
     row0 = df.iloc[0].to_dict() if not df.empty else {}
 
     label_map = ui.get("clinical_measure_labels", {}) if isinstance(ui, dict) else {}
