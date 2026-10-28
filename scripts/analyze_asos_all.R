@@ -308,7 +308,13 @@ web_row <- tibble(
   voice_breaks_percent      = col_or_na(df_out, "voice_breaks_percent"),
   locally_unvoiced_percent  = col_or_na(df_out, "locally_unvoiced_percent"),
   h1_h2                     = col_or_na(df_out, "H1-H2"),
-  h1_a1                     = col_or_na(df_out, "H1corr_A1corr")
+  h1_a1                     = col_or_na(df_out, "H1corr_A1corr"),
+  # f0_max_hz: freqüència fonamental màxima; s'utilitza com a F0_high al DSI.
+  f0_max_hz                 = col_or_na(df_out, "f0_max_hz"),
+  # i_low_db: intensitat mínima APROXIMADA (opció A) = mínim del contorn d'intensitat de la
+  # vocal sostinguda. S'utilitza com a I_low al DSI; és una aproximació i no coincideix
+  # exactament amb la I_low clínica (fonació suau dedicada).
+  i_low_db                  = col_or_na(df_out, "int_min_db_praatstyle")
 )
 
 # Robust norms placeholder (same as the original script)

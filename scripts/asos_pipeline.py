@@ -859,6 +859,18 @@ def main() -> None:
     point_process = call(pitch_obj, "To PointProcess")
     intensity_obj = to_intensity_robust(seg, time_step=0.0, minimum_pitch=100.0, subtract_mean="yes")
 
+    # APROXIMACIÓ de la I_mín del DSI (opció A).
+    # La I_low clínicament correcta del DSI és la intensitat més fluixa en una tasca
+    # dedicada de fonació suau; aquí NO en disposem. Per això l'aproximem amb el mínim del
+    # contorn d'intensitat de la vocal sostinguda /a/ que ja tenim. Aquesta aproximació
+    # esbiaixa el terme I_mín del DSI, de manera que les puntuacions no coincidiran
+    # exactament amb els rangs de referència publicats. S'accepta i es té en compte durant
+    # l'anàlisi (vegeu analyze_asos_all.R i routers/clinica.py).
+    try:
+        int_min = safe_float(call(intensity_obj, "Get minimum", 0, 0, "Parabolic"))
+    except Exception:
+        int_min = float("nan")
+
     if args.harmonicity_approach == "cc":
         harmonicity_obj = call(seg, "To Harmonicity (cc)", 0.01, args.pitch_floor, 0.1, 1.0)
     else:
@@ -941,6 +953,9 @@ def main() -> None:
         "a2k_db": float(a2k),
         "a5k_db": float(a5k),
 
+        # I_mín aproximada per al DSI (opció A): mínim del contorn d'intensitat de la vocal.
+        "int_min_db_praatstyle": float(int_min),
+
         # Extra "praat export" files
         "spectrum_text": saved_extra.get("spectrum_text", ""),
         "powercepstrum_text": saved_extra.get("powercepstrum_text", ""),
@@ -977,7 +992,7 @@ def main() -> None:
         "f1_mean_hz_praatstyle", "f2_mean_hz_praatstyle", "f3_mean_hz_praatstyle", "f4_mean_hz_praatstyle",
         "b1_mean_hz_praatstyle", "b2_mean_hz_praatstyle", "b3_mean_hz_praatstyle", "b4_mean_hz_praatstyle",
         "h1_freq_hz_target", "a1_freq_hz_target", "a2_freq_hz_target", "a3_freq_hz_target", "a4_freq_hz_target",
-        "int_mid_db_praatstyle", "int_mean_db_praatstyle",
+        "int_mid_db_praatstyle", "int_mean_db_praatstyle", "int_min_db_praatstyle",
     ]
 
     for fn in fieldnames:

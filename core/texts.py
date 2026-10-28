@@ -65,6 +65,31 @@ LANG_TEXTS = {'ca': {'app_title': 'AcousA - Anàlisi de la parla',
                               'no és preocupant; a vegades reflecteix una senyal molt estable o condicions '
                               'd’enregistrament especialment bones.',
         'plot_title': 'Els teus resultats',
+        'asos_dsi_title': 'Índex de Severitat de la Disfonia (DSI)',
+        'asos_dsi_intro': 'L’Índex de Severitat de la Disfonia (DSI) és un indicador global de la '
+                          'qualitat vocal calculat a partir de les mesures acústiques i aerodinàmiques '
+                          'enregistrades. La puntuació permet estimar el grau de severitat de la disfonia: '
+                          'els valors més alts indiquen una millor qualitat vocal i els valors més baixos, '
+                          'una alteració vocal més important. En l’escala de referència original, els valors '
+                          'se situen aproximadament entre +5 (veu sense disfonia) i −5 (disfonia greu). '
+                          'Tanmateix, com que els paràmetres individuals poden presentar un rang ampli de '
+                          'valors, també són possibles puntuacions fora d’aquest interval.',
+        'asos_dsi_formula': 'DSI = 0,13 · MPT + 0,0053 · F0_màx − 0,26 · I_mín − 1,18 · Jitter + 12,4',
+        'asos_dsi_legend': 'MPT: temps màxim de fonació (durada, en segons). · F0_màx: freqüència '
+                           'fonamental màxima (Hz). · I_mín: intensitat mínima (dB). · Jitter: jitter '
+                           'percentual (%).',
+        'asos_dsi_range_note': 'Interpretació orientativa (de moment, sense valors normatius per edat): '
+                               '~+5 indica absència de disfonia i ~−5 una disfonia greu; valors > 5 '
+                               'suggereixen una bona qualitat vocal i valors < 5, una qualitat vocal pitjor. '
+                               'En el futur s’incorporaran valors de referència adaptats per edat i sexe.',
+        'asos_dsi_unavailable': 'No s’ha pogut calcular el DSI en aquest enregistrament perquè falta '
+                                'alguna de les mesures necessàries (MPT, F0 màxima, intensitat mínima o jitter).',
+        'asos_dsi_approx_note': 'Nota: la I_mín s’aproxima a partir del mínim del contorn d’intensitat de '
+                                'la vocal sostinguda, de manera que el valor pot no coincidir exactament amb '
+                                'les escales de referència clàssiques.',
+        'asos_dsi_label_good': 'Qualitat vocal bona (orientatiu)',
+        'asos_dsi_label_mid': 'Qualitat vocal intermèdia (orientatiu)',
+        'asos_dsi_label_severe': 'Alteració vocal marcada (orientatiu)',
         'resources_title': 'Recursos',
         'resources_intro': 'Enllaços útils per a fonetistes i eines relacionades.',
         'back_home': 'Inici',
@@ -124,6 +149,12 @@ LANG_TEXTS = {'ca': {'app_title': 'AcousA - Anàlisi de la parla',
         'plot_hover_value': 'Valor',
         'plot_hover_scale': 'Escala',
         'results_unavailable': 'Els resultats ja no estan disponibles.',
+        'audio_spent_title': "L'enllaç de descàrrega ja s'ha fet servir",
+        'audio_spent_body': "Per protegir la gravació biomètrica, l'àudio d'aquesta anàlisi només "
+                            "es pot baixar una vegada i aquest enllaç ja s'ha utilitzat. Si "
+                            "necessites el fitxer de nou, torna a fer l'anàlisi.",
+        'audio_unavailable_title': 'Aquest àudio no es pot descarregar',
+        'audio_unavailable_body': "Aquest àudio ja no està disponible per baixar.",
         'hl_unit_sounds_per_second': 'sons/s',
         'hl_group_intonation': 'Entonació',
         'hl_group_complejidad_lexica': 'Complexitat lèxica',
@@ -456,6 +487,31 @@ LANG_TEXTS = {'ca': {'app_title': 'AcousA - Anàlisi de la parla',
                               'preocupante; a veces refleja una señal muy estable o condiciones de grabación '
                               'especialmente buenas.',
         'plot_title': 'Tus resultados',
+        'asos_dsi_title': 'Índice de Severidad de la Disfonía (DSI)',
+        'asos_dsi_intro': 'El Índice de Severidad de la Disfonía (DSI) es un indicador global de la calidad '
+                          'vocal calculado a partir de las medidas acústicas y aerodinámicas registradas. La '
+                          'puntuación permite estimar el grado de severidad de la disfonía: los valores más '
+                          'altos indican una mejor calidad vocal y los valores más bajos, una alteración vocal '
+                          'más importante. En la escala de referencia original, los valores se sitúan '
+                          'aproximadamente entre +5 (voz sin disfonía) y −5 (disfonía grave). No obstante, '
+                          'como los parámetros individuales pueden presentar un rango amplio de valores, '
+                          'también son posibles puntuaciones fuera de ese intervalo.',
+        'asos_dsi_formula': 'DSI = 0,13 · MPT + 0,0053 · F0_máx − 0,26 · I_mín − 1,18 · Jitter + 12,4',
+        'asos_dsi_legend': 'MPT: tiempo máximo de fonación (duración, en segundos). · F0_máx: frecuencia '
+                           'fundamental máxima (Hz). · I_mín: intensidad mínima (dB). · Jitter: jitter '
+                           'porcentual (%).',
+        'asos_dsi_range_note': 'Interpretación orientativa (por ahora, sin valores normativos por edad): '
+                               '~+5 indica ausencia de disfonía y ~−5 una disfonía grave; valores > 5 '
+                               'sugieren una buena calidad vocal y valores < 5, una calidad vocal peor. '
+                               'En el futuro se incorporarán valores de referencia adaptados por edad y sexo.',
+        'asos_dsi_unavailable': 'No se ha podido calcular el DSI en esta grabación porque falta alguna de '
+                                'las medidas necesarias (MPT, F0 máxima, intensidad mínima o jitter).',
+        'asos_dsi_approx_note': 'Nota: la I_mín se aproxima a partir del mínimo del contorno de intensidad '
+                                'de la vocal sostenida, de modo que el valor puede no coincidir exactamente '
+                                'con las escalas de referencia clásicas.',
+        'asos_dsi_label_good': 'Buena calidad vocal (orientativo)',
+        'asos_dsi_label_mid': 'Calidad vocal intermedia (orientativo)',
+        'asos_dsi_label_severe': 'Alteración vocal marcada (orientativo)',
         'resources_title': 'Recursos',
         'resources_intro': 'Enlaces útiles para fonetistas y herramientas relacionadas.',
         'back_home': 'Inicio',
@@ -515,6 +571,12 @@ LANG_TEXTS = {'ca': {'app_title': 'AcousA - Anàlisi de la parla',
         'plot_hover_value': 'Valor',
         'plot_hover_scale': 'Escala',
         'results_unavailable': 'Los resultados ya no están disponibles.',
+        'audio_spent_title': 'El enlace de descarga ya se ha utilizado',
+        'audio_spent_body': 'Para proteger la grabación biométrica, el audio de este análisis '
+                            'solo se puede descargar una vez y este enlace ya se ha utilizado. Si '
+                            'necesitas el archivo de nuevo, vuelve a realizar el análisis.',
+        'audio_unavailable_title': 'Este audio no se puede descargar',
+        'audio_unavailable_body': 'Este audio ya no está disponible para descargar.',
         'hl_unit_sounds_per_second': 'sonidos/s',
         'hl_group_intonation': 'Entonación',
         'hl_group_complejidad_lexica': 'Complejidad léxica',
@@ -842,6 +904,29 @@ LANG_TEXTS = {'ca': {'app_title': 'AcousA - Anàlisi de la parla',
         'asos_comment_below': 'Your results show jitter and/or shimmer below the typical range. This is usually not '
                               'concerning and may reflect a very stable signal or excellent recording conditions.',
         'plot_title': 'Your results',
+        'asos_dsi_title': 'Dysphonia Severity Index (DSI)',
+        'asos_dsi_intro': 'The Dysphonia Severity Index (DSI) is a global indicator of voice quality '
+                          'computed from the recorded acoustic and aerodynamic measures. The score estimates '
+                          'the degree of dysphonia severity: higher values indicate better voice quality and '
+                          'lower values a more important voice impairment. In the original reference scale, '
+                          'values lie roughly between +5 (no dysphonia) and −5 (severe dysphonia). However, '
+                          'since the individual parameters can span a wide range of values, scores outside '
+                          'that interval are also possible.',
+        'asos_dsi_formula': 'DSI = 0.13 · MPT + 0.0053 · F0_max − 0.26 · I_min − 1.18 · Jitter + 12.4',
+        'asos_dsi_legend': 'MPT: maximum phonation time (duration, in seconds). · F0_max: maximum '
+                           'fundamental frequency (Hz). · I_min: minimum intensity (dB). · Jitter: jitter '
+                           'percentage (%).',
+        'asos_dsi_range_note': 'Orientative interpretation (for now, without age-specific norms): ~+5 '
+                               'indicates absence of dysphonia and ~−5 a severe dysphonia; values > 5 suggest '
+                               'good voice quality and values < 5 poorer voice quality. Age- and sex-adjusted '
+                               'reference values will be added in the future.',
+        'asos_dsi_unavailable': 'The DSI could not be computed for this recording because one of the '
+                                'required measures is missing (MPT, maximum F0, minimum intensity or jitter).',
+        'asos_dsi_approx_note': 'Note: I_min is approximated from the minimum of the sustained-vowel '
+                                'intensity contour, so the value may not match classic reference scales exactly.',
+        'asos_dsi_label_good': 'Good voice quality (orientative)',
+        'asos_dsi_label_mid': 'Intermediate voice quality (orientative)',
+        'asos_dsi_label_severe': 'Marked voice impairment (orientative)',
         'resources_title': 'Resources',
         'resources_intro': 'Useful links for phoneticians and related tools.',
         'back_home': 'Home',
@@ -901,6 +986,12 @@ LANG_TEXTS = {'ca': {'app_title': 'AcousA - Anàlisi de la parla',
         'plot_hover_value': 'Value',
         'plot_hover_scale': 'Scale',
         'results_unavailable': 'The results are no longer available.',
+        'audio_spent_title': 'This download link has already been used',
+        'audio_spent_body': 'To protect the biometric recording, the audio from this analysis can '
+                            'only be downloaded once, and this link has already been used. If you '
+                            'need the file again, please run the analysis once more.',
+        'audio_unavailable_title': 'This audio cannot be downloaded',
+        'audio_unavailable_body': 'This audio is no longer available for download.',
         'hl_unit_sounds_per_second': 'sounds/s',
         'hl_group_intonation': 'Intonation',
         'hl_group_complejidad_lexica': 'Lexical complexity',

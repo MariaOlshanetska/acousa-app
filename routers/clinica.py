@@ -1168,6 +1168,45 @@ def _localize_habla_libre_payload(payload: dict[str, Any], ui: dict[str, Any]) -
     payload["interpretation_comment"] = interpretation_comment
     return payload
 
+
+def _localize_dsi_payload(payload: dict[str, Any], ui: dict[str, Any]) -> dict[str, Any]:
+    """Refresca els textos del DSI desat a la meta amb la llengua actual al re-render.
+
+    Mantenim el valor calculat i la disponibilitat (no depenen de la llengua) i tornem a
+    agafar els textos i l'etiqueta orientativa des de `ui`. Així el DSI segueix la llengua
+    quan es canvia d'idioma o s'obre l'enllaç compartible, i la caixa i el número sobreviuen
+    sempre al re-render.
+    """
+    if payload.get("task") != "asos":
+        return payload
+    dsi = payload.get("dsi")
+    if not isinstance(dsi, dict):
+        return payload
+
+    value = dsi.get("value")
+    available = dsi.get("available")
+
+    if not available:
+        label = ""
+    elif isinstance(value, (int, float)) and value > 5:
+        label = _ui_text(ui, "asos_dsi_label_good", "Qualitat vocal bona (orientatiu)")
+    elif isinstance(value, (int, float)) and value < -5:
+        label = _ui_text(ui, "asos_dsi_label_severe", "Alteració vocal marcada (orientatiu)")
+    else:
+        label = _ui_text(ui, "asos_dsi_label_mid", "Qualitat vocal intermèdia (orientatiu)")
+
+    dsi["label"] = label
+    dsi["title"] = _ui_text(ui, "asos_dsi_title", dsi.get("title", ""))
+    dsi["intro"] = _ui_text(ui, "asos_dsi_intro", dsi.get("intro", ""))
+    dsi["formula"] = _ui_text(ui, "asos_dsi_formula", dsi.get("formula", ""))
+    dsi["legend"] = _ui_text(ui, "asos_dsi_legend", dsi.get("legend", ""))
+    dsi["range_note"] = _ui_text(ui, "asos_dsi_range_note", dsi.get("range_note", ""))
+    dsi["unavailable"] = _ui_text(ui, "asos_dsi_unavailable", dsi.get("unavailable", ""))
+    dsi["approx_note"] = _ui_text(ui, "asos_dsi_approx_note", dsi.get("approx_note", ""))
+    payload["dsi"] = dsi
+    return payload
+
+
 def _norm_key(k: str) -> str:
     return k.strip().lower().replace(" ", "").replace("-", "_")
 
@@ -1553,7 +1592,57 @@ def _clinical_hover(
     return ""
 
 
-def _build_asos_rows(csv_path: Path, gender_value: str | None, ui) -> tuple[list[dict[str, Any]], str, str, str]:
+def _compute_dsi(row0: dict[str, Any]) -> float | None:
+    """Calcula l'Índex de Severitat de la Disfonia (DSI).
+
+    Fórmula: DSI = 0,13 · MPT + 0,0053 · F0_màx − 0,26 · I_mín − 1,18 · Jitter + 12,4
+    amb MPT en segons, F0_màx en Hz, I_mín en dB i Jitter en percentatge (%).
+    Retorna None si falta alguna de les quatre mesures (o no és finita), de manera que
+    la interfície mostri el DSI com a no disponible en comptes d'un valor erroni.
+    """
+    mpt = _safe_float(row0.get("mpt"))
+    f0_high = _safe_float(row0.get("f0_max_hz"))
+    i_low = _safe_float(row0.get("i_low_db"))
+    jitter = _safe_float(row0.get("jitter_pct"))
+    if mpt is None or f0_high is None or i_low is None or jitter is None:
+        return None
+    dsi = 0.13 * mpt + 0.0053 * f0_high - 0.26 * i_low - 1.18 * jitter + 12.4
+    return round(dsi, 2)
+
+
+def _build_dsi_payload(row0: dict[str, Any], ui) -> dict[str, Any]:
+    """Construeix el diccionari del DSI per a la plantilla (textos en català des de `ui`).
+
+    Classifica la puntuació amb una etiqueta orientativa (no diagnòstica):
+    valors > 5 -> bona qualitat vocal; entre −5 i 5 -> intermèdia; < −5 -> alteració marcada.
+    """
+    value = _compute_dsi(row0)
+    available = value is not None
+
+    if not available:
+        label = ""
+    elif value > 5:
+        label = _ui_text(ui, "asos_dsi_label_good", "Qualitat vocal bona (orientatiu)")
+    elif value < -5:
+        label = _ui_text(ui, "asos_dsi_label_severe", "Alteració vocal marcada (orientatiu)")
+    else:
+        label = _ui_text(ui, "asos_dsi_label_mid", "Qualitat vocal intermèdia (orientatiu)")
+
+    return {
+        "value": value,
+        "available": available,
+        "label": label,
+        "title": _ui_text(ui, "asos_dsi_title", "Índex de Severitat de la Disfonia (DSI)"),
+        "intro": _ui_text(ui, "asos_dsi_intro", ""),
+        "formula": _ui_text(ui, "asos_dsi_formula", ""),
+        "legend": _ui_text(ui, "asos_dsi_legend", ""),
+        "range_note": _ui_text(ui, "asos_dsi_range_note", ""),
+        "unavailable": _ui_text(ui, "asos_dsi_unavailable", ""),
+        "approx_note": _ui_text(ui, "asos_dsi_approx_note", ""),
+    }
+
+
+def _build_asos_rows(csv_path: Path, gender_value: str | None, ui) -> tuple[list[dict[str, Any]], str, str, str, dict[str, Any]]:
     df = pd.read_csv(csv_path, sep=None, engine="python")
     row0 = df.iloc[0].to_dict() if not df.empty else {}
 
@@ -1706,7 +1795,9 @@ def _build_asos_rows(csv_path: Path, gender_value: str | None, ui) -> tuple[list
     else:
         f0_summary_text = ""
 
-    return rows, interpretation_global, interpretation_comment, f0_summary_text
+    dsi_payload = _build_dsi_payload(row0, ui)
+
+    return rows, interpretation_global, interpretation_comment, f0_summary_text, dsi_payload
 
 
 def _build_generic_rows(csv_path: Path) -> tuple[list[dict[str, Any]], str, str]:
@@ -1866,6 +1957,24 @@ def _audio_token_matches(stored_hash: str, provided: str) -> bool:
     return hmac.compare_digest(stored_hash, _hash_audio_token(provided))
 
 
+def _audio_failure_page(reason: str) -> tuple[int, str, str]:
+    # Mapegem cada motiu de fallada a (codi d'estat, clau del títol, clau del missatge).
+    # Motiu de seguretat/UX: només el cas "token gastat" rep un missatge propi, perquè és
+    # l'únic que l'usuari legítim ha d'entendre ("ja has baixat l'àudio una vegada"). Tots
+    # els altres motius (resultat antic, token invàlid, meta o fitxer absents) es col·lapsen
+    # en un missatge genèric "no disponible": així NO filtrem a un tercer quin control concret
+    # ha fallat (p. ex. si el token és incorrecte o si simplement no existeix el resultat).
+    # Mantenim el codi d'estat real de cada branca (403/404) perquè el monitoratge i els
+    # clients es comportin igual que abans; només el cos passa a ser una pàgina amb estil.
+    # Funció pura, sense objectes de FastAPI, perquè es pugui provar sense aixecar el servidor.
+    if reason == "spent":
+        return (403, "audio_spent_title", "audio_spent_body")
+    if reason in ("legacy", "invalid"):
+        return (403, "audio_unavailable_title", "audio_unavailable_body")
+    # missing_meta, missing_stem, missing_file i qualsevol altre motiu -> 404 genèric.
+    return (404, "audio_unavailable_title", "audio_unavailable_body")
+
+
 def _build_index_context(request: Request, lang: str, task: str | None = None, error_message: str | None = None) -> dict[str, Any]:
     ui, lang = get_texts(lang)
     tasks = [{"id": task_id, "label": cfg["label"][lang]} for task_id, cfg in TASKS.items()]
@@ -1911,6 +2020,7 @@ async def show_results(
         )
 
     payload = _localize_habla_libre_payload(payload, ui)
+    payload = _localize_dsi_payload(payload, ui)
     payload["request"] = request
     payload["ui"] = ui
     payload["lang"] = lang
@@ -1929,7 +2039,9 @@ async def show_results(
         and not payload.get("audio_token_used")
         and _audio_token_matches(audio_token_hash, dl)
     ):
-        payload["audio_download_url"] = f"/clinica/results/{rid}/audio?token={dl}"
+        # Afegim &lang= perquè la pàgina d'error de la ruta d'àudio surti en la mateixa
+        # llengua que els resultats si el token ja s'ha gastat o no és vàlid.
+        payload["audio_download_url"] = f"/clinica/results/{rid}/audio?token={dl}&lang={lang}"
     else:
         payload["audio_download_url"] = None
 
@@ -1937,35 +2049,65 @@ async def show_results(
 
 
 @router.get("/results/{rid}/audio")
-async def download_audio(rid: str, token: str = Query(...)):
+async def download_audio(
+    request: Request,
+    rid: str,
+    token: str = Query(...),
+    # lang: llengua de la pàgina d'error. Motiu UX: quan bloquegem la descàrrega mostrem una
+    # pàgina amb estil (no un 403 cru), així que ha de sortir en la mateixa llengua que la
+    # pàgina de resultats des d'on s'ha clicat l'enllaç. show_results ja hi afegeix &lang=.
+    lang: str = Query(default=DEFAULT_LANG),
+):
     # Ruta protegida i d'un sol ús per baixar l'àudio biomètric (.wav).
     # Motiu de seguretat global: l'àudio és una dada biomètrica; no es pot servir per URL
     # directa ni quedar accessible a qui tingui l'enllaç compartible. Només qui va gravar,
     # amb el token que va rebre a la redirecció, el pot baixar, i només una vegada.
+    ui, lang = get_texts(lang)
+
+    # Quan un control falla, en lloc d'un HTTPException cru retornem una pàgina amb estil.
+    # Motiu UX/seguretat: l'usuari legítim (pacient o logopeda) ha d'entendre per què no pot
+    # baixar l'àudio (només una vegada), però NO hem de filtrar a un tercer quin control
+    # concret ha fallat. _audio_failure_page mapeja el motiu a (codi, títol, missatge) i
+    # només el cas "token gastat" rep un missatge propi; la resta es col·lapsen en un de genèric.
+    # Mantenim els codis d'estat reals (403/404) perquè segueixen sent errors.
+    def _blocked(reason: str):
+        status, title_key, message_key = _audio_failure_page(reason)
+        return templates.TemplateResponse(
+            "audio_unavailable.html",
+            {
+                "request": request,
+                "ui": ui,
+                "lang": lang,
+                "title": ui.get(title_key, ""),
+                "body": ui.get(message_key, ""),
+            },
+            status_code=status,
+        )
+
     payload = _load_meta(rid)
     if not payload:
-        raise HTTPException(status_code=404)
+        return _blocked("missing_meta")
 
     audio_token_hash = payload.get("audio_token_hash")
     # Resultats antics (sense hash de token): mai no es pot baixar l'àudio -> 403.
     if not audio_token_hash:
-        raise HTTPException(status_code=403)
+        return _blocked("legacy")
 
     # Ús estricte d'un sol cop: si el token ja s'ha consumit, bloquegem -> 403.
     if payload.get("audio_token_used"):
-        raise HTTPException(status_code=403)
+        return _blocked("spent")
 
     # Comparació en temps constant; token incorrecte o absent -> 403.
     if not _audio_token_matches(audio_token_hash, token):
-        raise HTTPException(status_code=403)
+        return _blocked("invalid")
 
     # Localitzem el .wav al disc a partir de l'audio_stem desat a la meta.
     audio_stem = payload.get("audio_stem")
     if not audio_stem:
-        raise HTTPException(status_code=404)
+        return _blocked("missing_stem")
     wav_file = RESULTS_DIR / f"{audio_stem}.wav"
     if not wav_file.exists():
-        raise HTTPException(status_code=404)
+        return _blocked("missing_file")
 
     # Cremem el token ABANS de servir el fitxer i persistim la meta.
     # Motiu de seguretat: si la connexió es talla a mig enviament, un reintent amb el mateix
@@ -2196,12 +2338,14 @@ async def analyze(
             robust_xlsx = SCRIPTS_DIR / "centres_sd_robustos_controls.xlsx"
             rows, interpretation_global, interpretation_comment = _build_pataka_rows(csv_path, robust_xlsx)
             f0_summary_text = ""
+            dsi = None
         elif task == "asos":
             final_gender = _final_gender_value(gender, gender_specify)
-            rows, interpretation_global, interpretation_comment, f0_summary_text = _build_asos_rows(csv_path, final_gender, ui)
+            rows, interpretation_global, interpretation_comment, f0_summary_text, dsi = _build_asos_rows(csv_path, final_gender, ui)
         elif task == "lectura":
             rows, interpretation_global, interpretation_comment = _build_lectura_rows(csv_path, ui=ui)
             f0_summary_text = ""
+            dsi = None
         elif task == "habla_libre":
             rows, interpretation_global, interpretation_comment, hl_norms_table_name = _build_habla_libre_rows(
                 csv_path,
@@ -2211,9 +2355,11 @@ async def analyze(
             )
             row_groups = _build_row_groups(rows, HABLA_LIBRE_RESULT_GROUPS, ui)
             f0_summary_text = ""
+            dsi = None
         else:
             rows, interpretation_global, interpretation_comment = _build_generic_rows(csv_path)
             f0_summary_text = ""
+            dsi = None
 
         csv_href, csv_name, audio_href, audio_name = _prepare_downloads(store_data, stem, task, csv_path, wav_path)
         textgrid_href = None
@@ -2380,8 +2526,14 @@ async def analyze(
             "filename": Path(audio.filename).name if audio.filename else wav_path.name,
             "task": task,
             "task_label": task_cfg["label"][lang],
+            # Es conserva l'edat a la meta per a futurs valors normatius del DSI adaptats
+            # per edat i sexe (encara no es calculen; de moment només es fa passar el valor).
             "age": age,
             "gender_value": final_gender,
+            # DSI (Índex de Severitat de la Disfonia): diccionari amb el valor i els textos;
+            # None per a tasques diferents d'ASOS. Es desa aquí perquè sobrevisqui al re-render
+            # de show_results (canvi d'idioma, enllaç compartible).
+            "dsi": dsi,
             "hl_norms_table_name": hl_norms_table_name,
             "rows": rows,
             "row_groups": row_groups,

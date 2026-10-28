@@ -220,6 +220,51 @@
 
         {# RLE se muestra ahora dentro del bloque de Complejidad léxica. #}
 
+        {# Caixa destacada del DSI: indicador global, just a sobre de "Els teus resultats". #}
+        {% if task == "asos" and dsi %}
+          <section
+            aria-labelledby="dsi-title"
+            style="margin-top:1.25rem;padding:1.25rem 1.3rem;border-radius:1rem;border:2px solid rgba(214, 132, 92, 0.85);background:#fffaf7;box-shadow:0 1px 6px rgba(214,132,92,0.15);">
+            <h3 id="dsi-title" style="margin:0 0 .6rem;font-size:1.2rem;color:#8a3d12;">
+              {{ dsi.title }}
+            </h3>
+
+            {% if dsi.available %}
+              <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;margin-bottom:.75rem;">
+                <span style="display:inline-block;font-size:2rem;font-weight:800;line-height:1;padding:.35rem .9rem;border-radius:.8rem;background:#8a3d12;color:#fff;">
+                  {{ dsi.value }}
+                </span>
+                {% if dsi.label %}
+                  <span style="font-size:1.02rem;font-weight:700;color:#5a2a0d;">{{ dsi.label }}</span>
+                {% endif %}
+              </div>
+
+              {% if dsi.intro %}
+                <p style="line-height:1.6;color:#444;margin:.35rem 0;">{{ dsi.intro }}</p>
+              {% endif %}
+              {% if dsi.formula %}
+                <p style="margin:.6rem 0;font-family:monospace;font-size:1rem;color:#333;background:#fff3ea;padding:.5rem .7rem;border-radius:.5rem;">{{ dsi.formula }}</p>
+              {% endif %}
+              {% if dsi.legend %}
+                <p style="line-height:1.55;color:#555;margin:.35rem 0;">{{ dsi.legend }}</p>
+              {% endif %}
+              {% if dsi.range_note %}
+                <p style="line-height:1.55;color:#555;margin:.35rem 0;">{{ dsi.range_note }}</p>
+              {% endif %}
+              {% if dsi.approx_note %}
+                <p style="font-size:.88rem;color:#777;margin:.6rem 0 0;line-height:1.5;">{{ dsi.approx_note }}</p>
+              {% endif %}
+            {% else %}
+              {% if dsi.intro %}
+                <p style="line-height:1.6;color:#444;margin:.35rem 0;">{{ dsi.intro }}</p>
+              {% endif %}
+              {% if dsi.unavailable %}
+                <p style="line-height:1.55;color:#8a3d12;font-weight:600;margin:.35rem 0;">{{ dsi.unavailable }}</p>
+              {% endif %}
+            {% endif %}
+          </section>
+        {% endif %}
+
         {% if row_groups %}
           <div class="plot-wrap">
             <h3>{{ ui.plot_title if ui.plot_title is defined else "Perfil de resultados" }}</h3>
