@@ -1650,6 +1650,130 @@ def _build_dsi_payload(row0: dict[str, Any], ui) -> dict[str, Any]:
     }
 
 
+def _asos_interpretation_texts(
+    rows: list[dict[str, Any]], ui: dict[str, Any]
+) -> tuple[str, str]:
+    """Recalcula els textos globals d'interpretació de l'ASOS a partir de les files desades.
+
+    Mateixa lògica que `_build_asos_rows` però reutilitzable al re-render per canvi de llengua:
+    agrupa els `hover_msg` ja localitzats de les mesures alterades, afegeix el patró airejat
+    (breathy) si es compleix el llindar H1–H2/H1–A1/HNR, i tria el missatge global i el comentari
+    corresponents des de `ui`. Així la interpretació segueix la llengua de la pàgina.
+    """
+    by_var = {r.get("variable"): r for r in rows}
+
+    def summary_txt(key: str, fallback: str = "", **kwargs) -> str:
+        template = ui.get(key, fallback) if isinstance(ui, dict) else fallback
+        return template.format(**kwargs)
+
+    alteration_comments = [
+        r["hover_msg"]
+        for r in rows
+        if r.get("hover_msg") and r.get("severity") in {"mild", "marked"}
+    ]
+
+    h1_h2 = _safe_float((by_var.get("h1_h2") or {}).get("value"))
+    h1_a1 = _safe_float((by_var.get("h1_a1") or {}).get("value"))
+    hnr = _safe_float((by_var.get("hnr_db") or {}).get("value"))
+
+    breathy_pattern = (
+        h1_h2 is not None and h1_h2 > 15.48
+        and h1_a1 is not None and h1_a1 > 5.0
+        and hnr is not None and hnr < 20.0
+    )
+    if breathy_pattern:
+        alteration_comments.append(
+            summary_txt(
+                "asos_breathy_pattern_body",
+                "La combinació d’H1–H2 i H1–A1 elevats amb un HNR baix pot ser compatible amb una veu més aviat airejada, però no és un criteri determinant per si sol.",
+            )
+        )
+
+    if len(alteration_comments) >= 3:
+        interpretation_global = summary_txt(
+            "many_flags",
+            "O bé l’enregistrament no és correcte, o bé la qualitat de la teva veu no és idònia.",
+        )
+    else:
+        interpretation_global = summary_txt(
+            "optimal",
+            "La qualitat de la teva veu és òptima.",
+        )
+
+    if alteration_comments:
+        interpretation_comment = summary_txt(
+            "asos_global_comment_with_findings",
+            (
+                "En conjunt, aquests paràmetres descriuen diferents aspectes de la qualitat vocal. "
+                "En aquest enregistrament destaquen aquests punts: {findings} "
+                "La lectura és orientativa i no constitueix un diagnòstic tancat."
+            ),
+            findings=" ".join(dict.fromkeys(alteration_comments)),
+        )
+    else:
+        interpretation_comment = summary_txt(
+            "asos_global_comment_no_findings",
+            (
+                "En conjunt, les mesures comparables no mostren desviacions rellevants. "
+                "La interpretació continua sent orientativa i depèn de la qualitat de l’enregistrament."
+            ),
+        )
+
+    return interpretation_global, interpretation_comment
+
+
+def _localize_asos_payload(payload: dict[str, Any], ui: dict[str, Any]) -> dict[str, Any]:
+    """Re-tradueix les files i els textos de l'ASOS desats a la meta quan es canvia la llengua.
+
+    Mateix patró que `_localize_habla_libre_payload`: els valors numèrics (value, z, severity,
+    normal_min/max, unitats) no depenen de la llengua i es conserven; el que sí es refresca des
+    de `ui` són l'etiqueta (`label`), la descripció de la mesura (`help_text`) i el missatge
+    clínic (`hover_msg`), a més dels textos globals d'interpretació i el resum de F0. Així, en
+    canviar d'idioma a la pàgina de resultats, les descripcions de les mesures també canvien de
+    llengua (abans quedaven fixades en la llengua de l'anàlisi).
+    """
+    if payload.get("task") != "asos":
+        return payload
+
+    rows = payload.get("rows") or []
+    gender_value = payload.get("gender_value")
+
+    label_map = ui.get("clinical_measure_labels", {}) if isinstance(ui, dict) else {}
+    help_map = ui.get("asos_measure_help", {}) if isinstance(ui, dict) else {}
+
+    for row in rows:
+        measure = row.get("variable", "")
+        value = _safe_float(row.get("value"))
+        row["label"] = label_map.get(measure, _clean_label(measure))
+        row["help_text"] = help_map.get(measure, "")
+        row["hover_msg"] = _clinical_hover(measure, value, gender_value, ui)
+
+    payload["rows"] = rows
+
+    interpretation_global, interpretation_comment = _asos_interpretation_texts(rows, ui)
+    payload["interpretation_global"] = interpretation_global
+    payload["interpretation_comment"] = interpretation_comment
+
+    # Resum de F0 (freqüència mitjana + nota musical) refrescat des de `ui`.
+    f0_row = next((r for r in rows if r.get("variable") == "f0_mean_hz"), None)
+    f0 = _safe_float(f0_row.get("value")) if f0_row else None
+    note_label = _hz_to_note_label(f0)
+    if f0 is not None and note_label:
+        payload["f0_summary_text"] = _ui_text(
+            ui,
+            "f0_mean_with_note",
+            "La teva freqüència mitjana és de {hz} Hz, cosa que equival a {note}.",
+        ).format(hz=round(f0, 1), note=note_label)
+    elif f0 is not None:
+        payload["f0_summary_text"] = _ui_text(
+            ui, "f0_mean", "La teva freqüència mitjana és de {hz} Hz."
+        ).format(hz=round(f0, 1))
+    else:
+        payload["f0_summary_text"] = ""
+
+    return payload
+
+
 def _build_asos_rows(csv_path: Path, gender_value: str | None, ui) -> tuple[list[dict[str, Any]], str, str, str, dict[str, Any]]:
     # encoding="utf-8-sig": el CSV l'escriu R (write_csv) amb un BOM UTF-8 al davant. Sense
     # això, el nom de la primera columna arriba com a "\ufeffmpt" i row0.get("mpt") torna None,
@@ -2032,6 +2156,7 @@ async def show_results(
         )
 
     payload = _localize_habla_libre_payload(payload, ui)
+    payload = _localize_asos_payload(payload, ui)
     payload = _localize_dsi_payload(payload, ui)
     payload["request"] = request
     payload["ui"] = ui
