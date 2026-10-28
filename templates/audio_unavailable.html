@@ -1,0 +1,117 @@
+{#
+  Pàgina d'àudio no disponible (ruta protegida d'un sol ús).
+  Motiu UX/seguretat: substituïm el 403/404 cru per una pàgina amigable i amb l'estil de
+  l'app, perquè l'usuari legítim (pacient o logopeda) entengui que l'àudio biomètric només
+  es pot baixar una vegada. El títol i el cos arriben ja localitzats des del router
+  (variables `title` i `body`): així NO revelem quin control concret ha fallat a un tercer;
+  només el cas "token gastat" rep un missatge propi, la resta un de genèric "no disponible".
+  Aquesta és una pàgina final: no hi posem ni botó de descàrrega ni selector de llengua.
+#}
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ title }} · {{ ui.app_title }}</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    :root{
+      --bg: #fff7f3;
+      --text: #2f2f2f;
+      --muted: #666;
+      --border: rgba(0,0,0,.06);
+      --shadow: 0 14px 30px rgba(0,0,0,.06);
+      --pill: #111111;
+      --pill-hover: #222222;
+      --soft-box: #fffaf8;
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background: linear-gradient(90deg, #c9b6ff 0%, #ffd7b8 100%) no-repeat;
+      background-size: 100% 220px;
+      background-color: var(--bg);
+    }
+
+    .page{ max-width:980px; margin:0 auto; padding:1.5rem 1rem 3rem; min-height:100vh; }
+    .shell{
+      background: rgba(255,255,255,.92);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      padding: 1.2rem;
+      backdrop-filter: blur(6px);
+    }
+    .topbar{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:1rem; margin-bottom:.8rem;
+    }
+    .title{ margin:.2rem 0 0 0; font-size:1.35rem; font-weight:750; }
+    .intro{ margin:.35rem 0 0 0; color:var(--muted); line-height:1.4; }
+
+    .notice-card{
+      background: var(--soft-box);
+      border-radius: 16px;
+      padding: 1.6rem 1.3rem 1.8rem;
+      border: 1px solid rgba(0,0,0,.05);
+      box-shadow: 0 10px 22px rgba(0,0,0,.04);
+      margin-top: 1rem;
+      text-align: center;
+    }
+    .notice-icon{ font-size:2.6rem; line-height:1; margin-bottom:.4rem; }
+    .notice-title{ margin:.3rem 0 .6rem; font-size:1.25rem; font-weight:800; color:#333; }
+    .notice-body{ margin:0 auto; max-width:38rem; color:#555; line-height:1.6; }
+
+    .actions{ display:flex; gap:.75rem; flex-wrap:wrap; justify-content:center; margin-top:1.5rem; }
+    .back-link{
+      display:inline-flex; align-items:center; justify-content:center;
+      min-height:44px; padding:.72rem 1.2rem; border-radius:999px;
+      background: var(--pill); color:#fff; text-decoration:none; font-weight:700;
+      border:none; box-shadow:0 10px 22px rgba(0,0,0,.08);
+      transition: background .12s ease, transform .12s ease;
+    }
+    .back-link:hover{ background: var(--pill-hover); transform: translateY(-1px); text-decoration:none; }
+
+    .banner{ margin-top:1.5rem; text-align:center; }
+    .banner img{
+      max-width:100%; border-radius:16px; box-shadow: 0 14px 30px rgba(0,0,0,.06);
+      border: 1px solid rgba(0,0,0,.05);
+    }
+
+    @media (max-width: 640px){
+      .page{ padding: .8rem .45rem 2rem; }
+      .shell{ padding: .75rem; border-radius: 16px; }
+      .notice-card{ padding: 1.2rem .75rem 1.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="shell">
+      <div class="topbar">
+        <div>
+          <h1 class="title">{{ ui.app_title }}</h1>
+          <p class="intro">{{ title }}</p>
+        </div>
+      </div>
+
+      <div class="notice-card">
+        <div class="notice-icon" aria-hidden="true">🔒</div>
+        <h2 class="notice-title">{{ title }}</h2>
+        <p class="notice-body">{{ body }}</p>
+
+        <div class="actions">
+          <a class="back-link" href="/clinica?lang={{ lang }}">{{ ui.back_home }}</a>
+        </div>
+      </div>
+
+      <div class="banner">
+        <img src="/static/Banner.png" alt="AcousA">
+      </div>
+    </div>
+  </div>
+</body>
+</html>
