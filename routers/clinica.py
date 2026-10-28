@@ -1186,16 +1186,8 @@ def _localize_dsi_payload(payload: dict[str, Any], ui: dict[str, Any]) -> dict[s
     value = dsi.get("value")
     available = dsi.get("available")
 
-    if not available:
-        label = ""
-    elif isinstance(value, (int, float)) and value > 5:
-        label = _ui_text(ui, "asos_dsi_label_good", "Qualitat vocal bona (orientatiu)")
-    elif isinstance(value, (int, float)) and value < -5:
-        label = _ui_text(ui, "asos_dsi_label_severe", "Alteració vocal marcada (orientatiu)")
-    else:
-        label = _ui_text(ui, "asos_dsi_label_mid", "Qualitat vocal intermèdia (orientatiu)")
-
-    dsi["label"] = label
+    # Mateixa classificació de llindar que al primer render (font única: `_dsi_label`).
+    dsi["label"] = _dsi_label(value, available, ui)
     dsi["title"] = _ui_text(ui, "asos_dsi_title", dsi.get("title", ""))
     dsi["intro"] = _ui_text(ui, "asos_dsi_intro", dsi.get("intro", ""))
     dsi["formula"] = _ui_text(ui, "asos_dsi_formula", dsi.get("formula", ""))
@@ -1599,6 +1591,13 @@ def _compute_dsi(row0: dict[str, Any]) -> float | None:
     amb MPT en segons, F0_màx en Hz, I_mín en dB i Jitter en percentatge (%).
     Retorna None si falta alguna de les quatre mesures (o no és finita), de manera que
     la interfície mostri el DSI com a no disponible en comptes d'un valor erroni.
+
+    FEINA FUTURA (edat): de moment NO es tenen en compte l'edat ni el sexe en el càlcul
+    ni en la interpretació del DSI; només es fa passar el valor de l'edat fins a la meta
+    i el context de resultats. Quan es disposi dels valors normatius per edat i sexe
+    (article de Karger citat a la petició), aquí s'hi haurà d'afegir la comparació amb el
+    valor de referència corresponent (p. ex. retornar també el percentil o la desviació
+    respecte a la norma d'edat/sexe) i ajustar l'etiqueta orientativa de `_dsi_label`.
     """
     mpt = _safe_float(row0.get("mpt"))
     f0_high = _safe_float(row0.get("f0_max_hz"))
@@ -1610,23 +1609,32 @@ def _compute_dsi(row0: dict[str, Any]) -> float | None:
     return round(dsi, 2)
 
 
+def _dsi_label(value: Any, available: Any, ui) -> str:
+    """Etiqueta orientativa (no diagnòstica) del DSI segons el llindar ±5.
+
+    Font única de veritat per a la classificació: valors > 5 -> bona qualitat vocal;
+    entre −5 i 5 -> intermèdia; < −5 -> alteració marcada. La fem servir tant al primer
+    render (`_build_dsi_payload`) com al re-render per canvi de llengua
+    (`_localize_dsi_payload`) perquè el llindar no es dupliqui en dos llocs.
+    """
+    if not available or not isinstance(value, (int, float)):
+        return ""
+    if value > 5:
+        return _ui_text(ui, "asos_dsi_label_good", "Qualitat vocal bona (orientatiu)")
+    if value < -5:
+        return _ui_text(ui, "asos_dsi_label_severe", "Alteració vocal marcada (orientatiu)")
+    return _ui_text(ui, "asos_dsi_label_mid", "Qualitat vocal intermèdia (orientatiu)")
+
+
 def _build_dsi_payload(row0: dict[str, Any], ui) -> dict[str, Any]:
     """Construeix el diccionari del DSI per a la plantilla (textos en català des de `ui`).
 
-    Classifica la puntuació amb una etiqueta orientativa (no diagnòstica):
+    Classifica la puntuació amb una etiqueta orientativa (no diagnòstica) via `_dsi_label`:
     valors > 5 -> bona qualitat vocal; entre −5 i 5 -> intermèdia; < −5 -> alteració marcada.
     """
     value = _compute_dsi(row0)
     available = value is not None
-
-    if not available:
-        label = ""
-    elif value > 5:
-        label = _ui_text(ui, "asos_dsi_label_good", "Qualitat vocal bona (orientatiu)")
-    elif value < -5:
-        label = _ui_text(ui, "asos_dsi_label_severe", "Alteració vocal marcada (orientatiu)")
-    else:
-        label = _ui_text(ui, "asos_dsi_label_mid", "Qualitat vocal intermèdia (orientatiu)")
+    label = _dsi_label(value, available, ui)
 
     return {
         "value": value,
