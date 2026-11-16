@@ -1,0 +1,9 @@
+{
+  "verdict": "APPROVED",
+  "findings": [
+    "Non-blocking (outside DSI scope): templates/audio_unavailable.html is untracked and not in commit 05579b0, yet the reworked download_audio renders it; the audio error path would raise TemplateNotFound on a clean checkout. Stage/commit the template.",
+    "Non-blocking: the audio-download error-page refactor (_audio_failure_page, download_audio rework, &lang= plumbing, audio_spent_*/audio_unavailable_* keys) is unrelated to DSI and should ideally be a separate commit.",
+    "Minor: DSI label-threshold logic (>5 / <-5) is duplicated in _build_dsi_payload and _localize_dsi_payload; they agree today but a future change must touch both."
+  ],
+  "reviewDoc": "/home/labfon/Documentos/acousa-app/.agents/tasks/dsi-review.md"
+}

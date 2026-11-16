@@ -400,7 +400,7 @@ LANG_TEXTS = {'ca': {'app_title': 'AcousA - Anàlisi de la parla',
             "En conjunt, aquests paràmetres descriuen diferents aspectes de la qualitat vocal: "
             "l’estabilitat de la fonació, la quantitat relativa de soroll i la distribució d’energia "
             "entre harmònics i formants. En aquest enregistrament destaquen aquests punts: {findings} "
-            "La lectura és orientativa i no constitueix un diagnòstic tancat."
+            "Aquesta eina ofereix informació orientativa sobre característiques acústiques de la veu. No és una eina diagnòstica ni substitueix una avaluació per part d'un professional de la veu."
         ),
         'asos_global_comment_no_findings': (
             "En conjunt, les mesures comparables no mostren desviacions rellevants. "
@@ -823,7 +823,7 @@ LANG_TEXTS = {'ca': {'app_title': 'AcousA - Anàlisi de la parla',
             "En conjunto, estos parámetros describen distintos aspectos de la calidad vocal: "
             "la estabilidad de la fonación, la cantidad relativa de ruido y la distribución de energía "
             "entre armónicos y formantes. En esta grabación destacan estos puntos: {findings} "
-            "La lectura es orientativa y no constituye un diagnóstico cerrado."
+            "Esta herramienta ofrece información orientativa sobre las características acústicas de la voz. No es una herramienta diagnóstica ni sustituye una evaluación realizada por un profesional de la voz."
         ),
         'asos_global_comment_no_findings': (
             "En conjunto, las medidas comparables no muestran desviaciones relevantes. "
@@ -1238,7 +1238,7 @@ LANG_TEXTS = {'ca': {'app_title': 'AcousA - Anàlisi de la parla',
             "Overall, these parameters describe different aspects of voice quality: "
             "phonatory stability, the relative amount of noise and the distribution of energy "
             "across harmonics and formants. In this recording, the following points stand out: {findings} "
-            "This interpretation is indicative and does not constitute a definitive diagnosis."
+            "This tool provides indicative information about the acoustic characteristics of the voice. It is not a diagnostic tool and does not replace an assessment by a speech therapist."
         ),
         'asos_global_comment_no_findings': (
             "Overall, the comparable measures do not show relevant deviations. "
