@@ -1195,6 +1195,7 @@ def _localize_dsi_payload(payload: dict[str, Any], ui: dict[str, Any]) -> dict[s
     dsi["range_note"] = _ui_text(ui, "asos_dsi_range_note", dsi.get("range_note", ""))
     dsi["unavailable"] = _ui_text(ui, "asos_dsi_unavailable", dsi.get("unavailable", ""))
     dsi["approx_note"] = _ui_text(ui, "asos_dsi_approx_note", dsi.get("approx_note", ""))
+    _dsi_norm_texts(dsi, ui)
     payload["dsi"] = dsi
     return payload
 
@@ -1536,6 +1537,9 @@ def _clinical_hover(
     def txt(text_key: str) -> str:
         return str(hover_texts.get(text_key, ""))
 
+    if key == "dsi":
+        # Indicador global: no genera missatge clínic propi (no entra a les alteracions).
+        return ""
     if key == "mpt":
         if value >= 15:
             return ""
@@ -1592,12 +1596,7 @@ def _compute_dsi(row0: dict[str, Any]) -> float | None:
     Retorna None si falta alguna de les quatre mesures (o no és finita), de manera que
     la interfície mostri el DSI com a no disponible en comptes d'un valor erroni.
 
-    FEINA FUTURA (edat): de moment NO es tenen en compte l'edat ni el sexe en el càlcul
-    ni en la interpretació del DSI; només es fa passar el valor de l'edat fins a la meta
-    i el context de resultats. Quan es disposi dels valors normatius per edat i sexe
-    (article de Karger citat a la petició), aquí s'hi haurà d'afegir la comparació amb el
-    valor de referència corresponent (p. ex. retornar també el percentil o la desviació
-    respecte a la norma d'edat/sexe) i ajustar l'etiqueta orientativa de `_dsi_label`.
+    La comparació amb els valors normatius per edat i sexe es fa a `_dsi_normative`.
     """
     mpt = _safe_float(row0.get("mpt"))
     f0_high = _safe_float(row0.get("f0_max_hz"))
@@ -1607,6 +1606,67 @@ def _compute_dsi(row0: dict[str, Any]) -> float | None:
         return None
     dsi = 0.13 * mpt + 0.0053 * f0_high - 0.26 * i_low - 1.18 * jitter + 12.4
     return round(dsi, 2)
+
+
+# Valors normatius del DSI per edat i sexe.
+# Font: Hakkesteegt MM, Brocaar MP, Wieringa MH, Feenstra L. "Influence of Age and Gender on the
+# Dysphonia Severity Index. A Study of Normative Values". Folia Phoniatr Logop 2006;58:264-273
+# (DOI 10.1159/000093183). Mostra: 118 adults sense queixes vocals (69 dones, 49 homes), 20-79 anys.
+# Rectes de predicció: dones 6,33 - 0,05·edat; homes 5,96 - 0,05·edat. L'efecte del sexe no va ser
+# significatiu, per això per a sexe desconegut/altre s'usa la fórmula mitjana 6,145 - 0,05·edat.
+DSI_NORM_AGE_MIN = 20
+DSI_NORM_AGE_MAX = 79
+DSI_NORM_PARAMS = {
+    # bucket: (intercept, SD del grup segons la taula 2 de l'article)
+    "f": (6.33, 2.01),
+    "m": (5.96, 1.94),
+    "other": (6.145, 2.00),
+}
+DSI_NORM_SLOPE = -0.05
+
+
+def _dsi_normative(age: Any, gender_value: str | None) -> dict[str, Any] | None:
+    """Predicció del DSI i rang de normalitat segons edat i sexe (Hakkesteegt et al., 2006).
+    Retorna {pred, min, max, sd, sex_bucket} o None si l'edat falta, no és numèrica o queda
+    fora de 20-79 anys (rang de l'estudi; no s'extrapola).
+    El rang de normalitat és pred ± 2·SD. Aproximació: l'article dona la SD del grup (no la SD
+    residual de la regressió). Amb ±2 SD, el z de les files de l'ASOS (centre = punt mig, SD =
+    amplada/4) queda dins de ±2 per a valors normals, igual que la resta de mesures.
+    """
+    age_f = _safe_float(age)
+    if age_f is None or age_f < DSI_NORM_AGE_MIN or age_f > DSI_NORM_AGE_MAX:
+        return None
+    bucket = _gender_bucket(gender_value) or "other"
+    intercept, sd = DSI_NORM_PARAMS[bucket]
+    pred = intercept + DSI_NORM_SLOPE * age_f
+    return {
+        "pred": round(pred, 3),
+        "min": round(pred - 2 * sd, 3),
+        "max": round(pred + 2 * sd, 3),
+        "sd": sd,
+        "sex_bucket": bucket,
+    }
+
+
+def _dsi_norm_texts(dsi: dict[str, Any], ui) -> None:
+    """Omple els textos dependents de la llengua de la predicció normativa del DSI.
+    Treballa a partir dels camps numèrics desats (`norm_*`); les metas antigues sense aquests
+    camps es tracten com a "sense predicció" i no fallen.
+    """
+    pred = dsi.get("norm_pred")
+    nmin = dsi.get("norm_min")
+    nmax = dsi.get("norm_max")
+    has_norm = all(isinstance(x, (int, float)) for x in (pred, nmin, nmax))
+    if has_norm:
+        dsi["prediction"] = _ui_text(ui, "asos_dsi_prediction", "").format(
+            pred=round(pred, 2), min=round(nmin, 2), max=round(nmax, 2)
+        )
+        dsi["prediction_note"] = ""
+        dsi["reference_source"] = _ui_text(ui, "asos_dsi_reference_source", "")
+    else:
+        dsi["prediction"] = ""
+        dsi["prediction_note"] = _ui_text(ui, "asos_dsi_prediction_unavailable", "")
+        dsi["reference_source"] = ""
 
 
 def _dsi_label(value: Any, available: Any, ui) -> str:
@@ -1626,7 +1686,9 @@ def _dsi_label(value: Any, available: Any, ui) -> str:
     return _ui_text(ui, "asos_dsi_label_mid", "Qualitat vocal intermèdia (orientatiu)")
 
 
-def _build_dsi_payload(row0: dict[str, Any], ui) -> dict[str, Any]:
+def _build_dsi_payload(
+    row0: dict[str, Any], ui, norm: dict[str, Any] | None = None
+) -> dict[str, Any]:
     """Construeix el diccionari del DSI per a la plantilla (textos en català des de `ui`).
 
     Classifica la puntuació amb una etiqueta orientativa (no diagnòstica) via `_dsi_label`:
@@ -1636,10 +1698,15 @@ def _build_dsi_payload(row0: dict[str, Any], ui) -> dict[str, Any]:
     available = value is not None
     label = _dsi_label(value, available, ui)
 
-    return {
+    dsi = {
         "value": value,
         "available": available,
         "label": label,
+        "norm_pred": norm["pred"] if norm else None,
+        "norm_min": norm["min"] if norm else None,
+        "norm_max": norm["max"] if norm else None,
+        "norm_sd": norm["sd"] if norm else None,
+        "norm_sex_bucket": norm["sex_bucket"] if norm else None,
         "title": _ui_text(ui, "asos_dsi_title", "Índex de Severitat de la Disfonia (DSI)"),
         "intro": _ui_text(ui, "asos_dsi_intro", ""),
         "formula": _ui_text(ui, "asos_dsi_formula", ""),
@@ -1648,6 +1715,8 @@ def _build_dsi_payload(row0: dict[str, Any], ui) -> dict[str, Any]:
         "unavailable": _ui_text(ui, "asos_dsi_unavailable", ""),
         "approx_note": _ui_text(ui, "asos_dsi_approx_note", ""),
     }
+    _dsi_norm_texts(dsi, ui)
+    return dsi
 
 
 def _asos_interpretation_texts(
@@ -1774,7 +1843,7 @@ def _localize_asos_payload(payload: dict[str, Any], ui: dict[str, Any]) -> dict[
     return payload
 
 
-def _build_asos_rows(csv_path: Path, gender_value: str | None, ui) -> tuple[list[dict[str, Any]], str, str, str, dict[str, Any]]:
+def _build_asos_rows(csv_path: Path, gender_value: str | None, ui, age: Any = None) -> tuple[list[dict[str, Any]], str, str, str, dict[str, Any]]:
     # encoding="utf-8-sig": el CSV l'escriu R (write_csv) amb un BOM UTF-8 al davant. Sense
     # això, el nom de la primera columna arriba com a "\ufeffmpt" i row0.get("mpt") torna None,
     # cosa que deixava el DSI com a "no disponible" tot i tenir totes les mesures. Amb utf-8-sig
@@ -1931,8 +2000,31 @@ def _build_asos_rows(csv_path: Path, gender_value: str | None, ui) -> tuple[list
     else:
         f0_summary_text = ""
 
-    dsi_payload = _build_dsi_payload(row0, ui)
-
+    norm = _dsi_normative(age, gender_value)
+    dsi_payload = _build_dsi_payload(row0, ui, norm)
+    # Fila del DSI al perfil de resultats, la primera, només si hi ha valor i rang normatiu.
+    # hover_msg buit: no compta a `alteration_comments` ni canvia la interpretació global.
+    if dsi_payload.get("available") and norm is not None:
+        dsi_val = dsi_payload["value"]
+        center = (norm["min"] + norm["max"]) / 2.0
+        sd_row = (norm["max"] - norm["min"]) / 4.0
+        z = (dsi_val - center) / sd_row
+        rows.insert(
+            0,
+            {
+                "variable": "dsi",
+                "label": label_map.get("dsi", "DSI"),
+                "value": round(dsi_val, 4),
+                "z": round(z, 2),
+                "help_text": help_map.get("dsi", ""),
+                "hover_msg": "",
+                "severity": _severity_from_z(z),
+                "unit": "",
+                "normal_min": round(norm["min"], 4),
+                "normal_max": round(norm["max"], 4),
+                **_range_payload(dsi_val, norm["min"], norm["max"]),
+            },
+        )
     return rows, interpretation_global, interpretation_comment, f0_summary_text, dsi_payload
 
 
@@ -2478,7 +2570,7 @@ async def analyze(
             dsi = None
         elif task == "asos":
             final_gender = _final_gender_value(gender, gender_specify)
-            rows, interpretation_global, interpretation_comment, f0_summary_text, dsi = _build_asos_rows(csv_path, final_gender, ui)
+            rows, interpretation_global, interpretation_comment, f0_summary_text, dsi = _build_asos_rows(csv_path, final_gender, ui, age=age)
         elif task == "lectura":
             rows, interpretation_global, interpretation_comment = _build_lectura_rows(csv_path, ui=ui)
             f0_summary_text = ""
@@ -2663,8 +2755,8 @@ async def analyze(
             "filename": Path(audio.filename).name if audio.filename else wav_path.name,
             "task": task,
             "task_label": task_cfg["label"][lang],
-            # Es conserva l'edat a la meta per a futurs valors normatius del DSI adaptats
-            # per edat i sexe (encara no es calculen; de moment només es fa passar el valor).
+            # L'edat es conserva a la meta; el DSI la usa per a la predicció normativa
+            # (només si és dins de 20-79 anys, vegeu `_dsi_normative`).
             "age": age,
             "gender_value": final_gender,
             # DSI (Índex de Severitat de la Disfonia): diccionari amb el valor i els textos;
