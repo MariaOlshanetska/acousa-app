@@ -1719,6 +1719,10 @@ def _build_dsi_payload(
     return dsi
 
 
+# Mesures de l'ASOS que s'usen només per calcular el DSI i que no es mostren al gràfic.
+_ASOS_HIDDEN_ROWS = {"f0_max_hz", "i_low_db"}
+
+
 def _asos_interpretation_texts(
     rows: list[dict[str, Any]], ui: dict[str, Any]
 ) -> tuple[str, str]:
@@ -1804,7 +1808,8 @@ def _localize_asos_payload(payload: dict[str, Any], ui: dict[str, Any]) -> dict[
     if payload.get("task") != "asos":
         return payload
 
-    rows = payload.get("rows") or []
+    # També filtrem els resultats antics, desats abans d'ocultar F0 màxima i I mínima.
+    rows = [r for r in (payload.get("rows") or []) if r.get("variable") not in _ASOS_HIDDEN_ROWS]
     gender_value = payload.get("gender_value")
 
     label_map = ui.get("clinical_measure_labels", {}) if isinstance(ui, dict) else {}
@@ -1868,7 +1873,12 @@ def _build_asos_rows(csv_path: Path, gender_value: str | None, ui, age: Any = No
 
     rows: list[dict[str, Any]] = []
 
+    # F0 màxima i intensitat mínima només s'usen com a entrades del DSI (es mantenen al CSV
+    # i a row0): no tenen valors de normalitat i per si soles no signifiquen res, així que
+    # no es mostren com a files del gràfic.
     for measure, raw_val in row0.items():
+        if measure in _ASOS_HIDDEN_ROWS:
+            continue
         val = _safe_float(raw_val)
         if val is None:
             continue
