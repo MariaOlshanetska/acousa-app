@@ -1190,11 +1190,18 @@ def _localize_dsi_payload(payload: dict[str, Any], ui: dict[str, Any]) -> dict[s
     dsi["label"] = _dsi_label(value, available, ui)
     dsi["title"] = _ui_text(ui, "asos_dsi_title", dsi.get("title", ""))
     dsi["intro"] = _ui_text(ui, "asos_dsi_intro", dsi.get("intro", ""))
-    dsi["formula"] = _ui_text(ui, "asos_dsi_formula", dsi.get("formula", ""))
-    dsi["legend"] = _ui_text(ui, "asos_dsi_legend", dsi.get("legend", ""))
+    # Les metas antigues (sense `f0_high_method`) es van calcular amb la F0 màxima mesurada:
+    # descrivim aquell mètode amb els textos "legacy" i no afirmem el mètode nou.
+    new_method = dsi.get("f0_high_method") == "mean_plus_6st"
+    sfx = "" if new_method else "_f0max"
+    dsi["formula"] = _ui_text(ui, "asos_dsi_formula" + sfx, dsi.get("formula", ""))
+    dsi["legend"] = _ui_text(ui, "asos_dsi_legend" + sfx, dsi.get("legend", ""))
+    dsi["f0_note"] = _ui_text(ui, "asos_dsi_f0_note", "") if new_method else ""
     dsi["range_note"] = _ui_text(ui, "asos_dsi_range_note", dsi.get("range_note", ""))
     dsi["unavailable"] = _ui_text(ui, "asos_dsi_unavailable", dsi.get("unavailable", ""))
-    dsi["approx_note"] = _ui_text(ui, "asos_dsi_approx_note", dsi.get("approx_note", ""))
+    dsi["approx_note"] = _ui_text(
+        ui, "asos_dsi_approx_note" + sfx, dsi.get("approx_note", "")
+    )
     _dsi_norm_texts(dsi, ui)
     payload["dsi"] = dsi
     return payload
@@ -1591,15 +1598,19 @@ def _clinical_hover(
 def _compute_dsi(row0: dict[str, Any]) -> float | None:
     """Calcula l'Índex de Severitat de la Disfonia (DSI).
 
-    Fórmula: DSI = 0,13 · MPT + 0,0053 · F0_màx − 0,26 · I_mín − 1,18 · Jitter + 12,4
-    amb MPT en segons, F0_màx en Hz, I_mín en dB i Jitter en percentatge (%).
+    Fórmula: DSI = 0,13 · MPT + 0,0053 · F0_alta − 0,26 · I_mín − 1,18 · Jitter + 12,4
+    amb MPT en segons, F0_alta en Hz, I_mín en dB i Jitter en percentatge (%).
+    F0_alta és una ESTIMACIÓ (`f0_high_6st_hz` = F0 mitjana de la vocal + 6 semitons), no la F0
+    màxima mesurada; I_mín és el mínim d'intensitat de la vocal (aproximació).
     Retorna None si falta alguna de les quatre mesures (o no és finita), de manera que
     la interfície mostri el DSI com a no disponible en comptes d'un valor erroni.
 
     La comparació amb els valors normatius per edat i sexe es fa a `_dsi_normative`.
     """
     mpt = _safe_float(row0.get("mpt"))
-    f0_high = _safe_float(row0.get("f0_max_hz"))
+    # Només usem la F0_alta estimada. Si un CSV antic no té la columna, retornem None en comptes
+    # de barrejar definicions (F0 màxima vs. estimada); les anàlisis noves sempre la porten.
+    f0_high = _safe_float(row0.get("f0_high_6st_hz"))
     i_low = _safe_float(row0.get("i_low_db"))
     jitter = _safe_float(row0.get("jitter_pct"))
     if mpt is None or f0_high is None or i_low is None or jitter is None:
@@ -1714,13 +1725,16 @@ def _build_dsi_payload(
         "range_note": _ui_text(ui, "asos_dsi_range_note", ""),
         "unavailable": _ui_text(ui, "asos_dsi_unavailable", ""),
         "approx_note": _ui_text(ui, "asos_dsi_approx_note", ""),
+        "f0_note": _ui_text(ui, "asos_dsi_f0_note", ""),
+        # Mètode de F0_alta usat al càlcul; les metas antigues no el tenen (F0 màxima mesurada).
+        "f0_high_method": "mean_plus_6st",
     }
     _dsi_norm_texts(dsi, ui)
     return dsi
 
 
 # Mesures de l'ASOS que s'usen només per calcular el DSI i que no es mostren al gràfic.
-_ASOS_HIDDEN_ROWS = {"f0_max_hz", "i_low_db"}
+_ASOS_HIDDEN_ROWS = {"f0_max_hz", "i_low_db", "f0_high_6st_hz"}
 
 
 def _asos_interpretation_texts(

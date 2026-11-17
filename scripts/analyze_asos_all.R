@@ -311,6 +311,9 @@ web_row <- tibble(
   h1_a1                     = col_or_na(df_out, "H1corr_A1corr"),
   # f0_max_hz: freqüència fonamental màxima; s'utilitza com a F0_high al DSI.
   f0_max_hz                 = col_or_na(df_out, "f0_max_hz"),
+  # f0_high_6st_hz: F0_alta ESTIMADA = F0 mitjana de la vocal + 6 semitons (x2^(6/12)).
+  # És l'entrada de F0_alta del DSI (substitueix f0_max_hz, que es manté només com a mesura).
+  f0_high_6st_hz            = col_or_na(df_out, "f0_high_6st_hz"),
   # i_low_db: intensitat mínima APROXIMADA (opció A) = mínim del contorn d'intensitat de la
   # vocal sostinguda. S'utilitza com a I_low al DSI; és una aproximació i no coincideix
   # exactament amb la I_low clínica (fonació suau dedicada).

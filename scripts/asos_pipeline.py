@@ -955,6 +955,15 @@ def main() -> None:
 
         # I_mín aproximada per al DSI (opció A): mínim del contorn d'intensitat de la vocal.
         "int_min_db_praatstyle": float(int_min),
+        # F0_alta estimada per al DSI: F0 mitjana de la vocal a to còmode + 6 semitons
+        # (interval habitual per fer una pregunta en veu de pit parlada). Substitueix f0_max_hz
+        # com a entrada del DSI, ja que aquesta tasca no inclou el glissando ascendent de
+        # l'original. f0_max_hz continua mesurada i guardada al TSV.
+        "f0_high_6st_hz": (
+            float(vq["f0_mean_hz"]) * 2 ** (6 / 12)
+            if np.isfinite(vq.get("f0_mean_hz", float("nan"))) and vq["f0_mean_hz"] > 0
+            else float("nan")
+        ),
 
         # Extra "praat export" files
         "spectrum_text": saved_extra.get("spectrum_text", ""),
@@ -993,6 +1002,7 @@ def main() -> None:
         "b1_mean_hz_praatstyle", "b2_mean_hz_praatstyle", "b3_mean_hz_praatstyle", "b4_mean_hz_praatstyle",
         "h1_freq_hz_target", "a1_freq_hz_target", "a2_freq_hz_target", "a3_freq_hz_target", "a4_freq_hz_target",
         "int_mid_db_praatstyle", "int_mean_db_praatstyle", "int_min_db_praatstyle",
+        "f0_high_6st_hz",
     ]
 
     for fn in fieldnames:

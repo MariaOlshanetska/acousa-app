@@ -74,8 +74,12 @@ LANG_TEXTS = {'ca': {'app_title': 'AcousA - Anàlisi de la parla',
                           'se situen aproximadament entre +5 (veu sense disfonia) i −5 (disfonia greu). '
                           'Tanmateix, com que els paràmetres individuals poden presentar un rang ampli de '
                           'valors, també són possibles puntuacions fora d’aquest interval.',
-        'asos_dsi_formula': 'DSI = 0,13 · MPT + 0,0053 · F0_màx − 0,26 · I_mín − 1,18 · Jitter + 12,4',
-        'asos_dsi_legend': 'MPT: temps màxim de fonació (durada, en segons). · F0_màx: freqüència '
+        'asos_dsi_formula': 'DSI = 0,13 · MPT + 0,0053 · F0_alta − 0,26 · I_mín − 1,18 · Jitter + 12,4',
+        'asos_dsi_formula_f0max': 'DSI = 0,13 · MPT + 0,0053 · F0_màx − 0,26 · I_mín − 1,18 · Jitter + 12,4',
+        'asos_dsi_legend': 'MPT: temps màxim de fonació (durada, en segons). · F0_alta: freqüència '
+                           'fonamental alta estimada = F0 mitjana + 6 semitons (Hz). · I_mín: intensitat '
+                           'mínima aproximada (dB). · Jitter: jitter percentual (%).',
+        'asos_dsi_legend_f0max': 'MPT: temps màxim de fonació (durada, en segons). · F0_màx: freqüència '
                            'fonamental màxima (Hz). · I_mín: intensitat mínima (dB). · Jitter: jitter '
                            'percentual (%).',
         'asos_dsi_range_note': 'Interpretació orientativa: com a referència general, ~+5 indica absència de disfonia i ~−5 una disfonia greu; valors > 5 suggereixen una bona qualitat vocal i valors < 5, una qualitat vocal pitjor. Si es coneix l’edat (entre 20 i 79 anys), el resultat també es compara amb el valor normatiu ajustat per edat i sexe.',
@@ -83,8 +87,10 @@ LANG_TEXTS = {'ca': {'app_title': 'AcousA - Anàlisi de la parla',
         'asos_dsi_prediction_unavailable': 'La referència ajustada per edat i sexe només està disponible per a edats entre 20 i 79 anys; per això aquest resultat s’interpreta només amb la referència general.',
         'asos_dsi_reference_source': 'Font dels valors normatius: Hakkesteegt et al., 2006, Folia Phoniatr Logop 58:264-273.',
         'asos_dsi_unavailable': 'No s’ha pogut calcular el DSI en aquest enregistrament perquè falta '
-                                'alguna de les mesures necessàries (MPT, F0 màxima, intensitat mínima o jitter).',
-        'asos_dsi_approx_note': 'Nota: la I_mín s’aproxima a partir del mínim d’intensitat de la vocal /a/ sostinguda, no d’una tasca de fonació el més suau possible en dB SPL com als estudis de referència. Per això la puntuació pot quedar esbiaixada a la baixa respecte als valors normatius.',
+                                'alguna de les mesures necessàries (MPT, F0 alta, intensitat mínima o jitter).',
+        'asos_dsi_approx_note': 'Nota: aquest DSI usa dues aproximacions. La F0_alta és una estimació (F0 mitjana + 6 semitons), no la F0 màxima mesurada, i la I_mín s’obté del mínim d’intensitat de la vocal /a/ sostinguda, en dB no calibrats, no d’una tasca de fonació específica com als estudis de referència. Per això el DSI pot sortir més baix que els valors de referència de l’article. És una puntuació orientativa i no un diagnòstic.',
+        'asos_dsi_approx_note_f0max': 'Nota: la I_mín s’aproxima a partir del mínim d’intensitat de la vocal /a/ sostinguda, no d’una tasca de fonació específica com als estudis de referència. Per això la puntuació pot quedar esbiaixada a la baixa respecte als valors normatius.',
+        'asos_dsi_f0_note': 'Per què F0_alta s’estima? El DSI original fa servir la freqüència més alta que s’assoleix en un glissando ascendent, una prova que aquesta tasca no inclou. Per això estimem F0_alta com la F0 mitjana de la teva vocal a to còmode més 6 semitons (l’interval que sol caldre per pujar el to en una pregunta en veu de pit parlada), és a dir, multiplicant-la per aprox. 1,41.',
         'asos_dsi_label_good': 'Qualitat vocal bona (orientatiu)',
         'asos_dsi_label_mid': 'Qualitat vocal intermèdia (orientatiu)',
         'asos_dsi_label_severe': 'Alteració vocal marcada (orientatiu)',
@@ -307,7 +313,7 @@ LANG_TEXTS = {'ca': {'app_title': 'AcousA - Anàlisi de la parla',
               },
         'asos_measure_help': {
               'dsi': (
-                  'Índex de Severitat de la Disfonia (DSI): indicador global de la qualitat vocal que combina MPT, F0 màxima, intensitat mínima i jitter. Valors més alts indiquen millor qualitat vocal. La franja de normalitat depèn de l’edat i el sexe.'
+                  'Índex de Severitat de la Disfonia (DSI): indicador global de la qualitat vocal que combina MPT, F0 alta estimada, intensitat mínima i jitter. Valors més alts indiquen millor qualitat vocal. La franja de normalitat depèn de l’edat i el sexe.'
               ),
               'mpt': (
                   "Temps màxim de fonació (MPT): durada, en segons, del tram de veu contínua "
@@ -498,8 +504,12 @@ LANG_TEXTS = {'ca': {'app_title': 'AcousA - Anàlisi de la parla',
                           'aproximadamente entre +5 (voz sin disfonía) y −5 (disfonía grave). No obstante, '
                           'como los parámetros individuales pueden presentar un rango amplio de valores, '
                           'también son posibles puntuaciones fuera de ese intervalo.',
-        'asos_dsi_formula': 'DSI = 0,13 · MPT + 0,0053 · F0_máx − 0,26 · I_mín − 1,18 · Jitter + 12,4',
-        'asos_dsi_legend': 'MPT: tiempo máximo de fonación (duración, en segundos). · F0_máx: frecuencia '
+        'asos_dsi_formula': 'DSI = 0,13 · MPT + 0,0053 · F0_alta − 0,26 · I_mín − 1,18 · Jitter + 12,4',
+        'asos_dsi_formula_f0max': 'DSI = 0,13 · MPT + 0,0053 · F0_máx − 0,26 · I_mín − 1,18 · Jitter + 12,4',
+        'asos_dsi_legend': 'MPT: tiempo máximo de fonación (duración, en segundos). · F0_alta: frecuencia '
+                           'fundamental alta estimada = F0 media + 6 semitonos (Hz). · I_mín: intensidad '
+                           'mínima aproximada (dB). · Jitter: jitter porcentual (%).',
+        'asos_dsi_legend_f0max': 'MPT: tiempo máximo de fonación (duración, en segundos). · F0_máx: frecuencia '
                            'fundamental máxima (Hz). · I_mín: intensidad mínima (dB). · Jitter: jitter '
                            'porcentual (%).',
         'asos_dsi_range_note': 'Interpretación orientativa: como referencia general, ~+5 indica ausencia de disfonía y ~−5 una disfonía grave; valores > 5 sugieren una buena calidad vocal y valores < 5, una calidad vocal peor. Si se conoce la edad (entre 20 y 79 años), el resultado también se compara con el valor normativo ajustado por edad y sexo.',
@@ -507,8 +517,10 @@ LANG_TEXTS = {'ca': {'app_title': 'AcousA - Anàlisi de la parla',
         'asos_dsi_prediction_unavailable': 'La referencia ajustada por edad y sexo solo está disponible para edades entre 20 y 79 años; por eso este resultado se interpreta solo con la referencia general.',
         'asos_dsi_reference_source': 'Fuente de los valores normativos: Hakkesteegt et al., 2006, Folia Phoniatr Logop 58:264-273.',
         'asos_dsi_unavailable': 'No se ha podido calcular el DSI en esta grabación porque falta alguna de '
-                                'las medidas necesarias (MPT, F0 máxima, intensidad mínima o jitter).',
-        'asos_dsi_approx_note': 'Nota: la I_mín se aproxima a partir del mínimo de intensidad de la vocal /a/ sostenida, no de una tarea de fonación lo más suave posible en dB SPL como en los estudios de referencia. Por ello la puntuación puede quedar sesgada a la baja respecto a los valores normativos.',
+                                'las medidas necesarias (MPT, F0 alta, intensidad mínima o jitter).',
+        'asos_dsi_approx_note': 'Nota: este DSI usa dos aproximaciones. La F0_alta es una estimación (F0 media + 6 semitonos), no la F0 máxima medida, y la I_mín se obtiene del mínimo de intensidad de la vocal /a/ sostenida, en dB no calibrados, no de una tarea de fonación específica como en los estudios de referencia. Por ello el DSI puede salir más bajo que los valores de referencia del artículo. Es una puntuación orientativa y no un diagnóstico.',
+        'asos_dsi_approx_note_f0max': 'Nota: la I_mín se aproxima a partir del mínimo de intensidad de la vocal /a/ sostenida, no de una tarea de fonación específica como en los estudios de referencia. Por ello la puntuación puede quedar sesgada a la baja respecto a los valores normativos.',
+        'asos_dsi_f0_note': '¿Por qué se estima F0_alta? El DSI original usa la frecuencia más alta que se alcanza en un glissando ascendente, una prueba que esta tarea no incluye. Por eso estimamos F0_alta como la F0 media de tu vocal a tono cómodo más 6 semitonos (el intervalo que suele hacer falta para subir el tono en una pregunta en voz de pecho hablada), es decir, multiplicándola por aprox. 1,41.',
         'asos_dsi_label_good': 'Buena calidad vocal (orientativo)',
         'asos_dsi_label_mid': 'Calidad vocal intermedia (orientativo)',
         'asos_dsi_label_severe': 'Alteración vocal marcada (orientativo)',
@@ -732,7 +744,7 @@ LANG_TEXTS = {'ca': {'app_title': 'AcousA - Anàlisi de la parla',
               },
         'asos_measure_help': {
               'dsi': (
-                  'Índice de Severidad de la Disfonía (DSI): indicador global de la calidad vocal que combina MPT, F0 máxima, intensidad mínima y jitter. Valores más altos indican mejor calidad vocal. La franja de normalidad depende de la edad y el sexo.'
+                  'Índice de Severidad de la Disfonía (DSI): indicador global de la calidad vocal que combina MPT, F0 alta estimada, intensidad mínima y jitter. Valores más altos indican mejor calidad vocal. La franja de normalidad depende de la edad y el sexo.'
               ),
               'mpt': (
                   "Tiempo máximo de fonación (MPT): duración, en segundos, del tramo de voz continua "
@@ -916,8 +928,12 @@ LANG_TEXTS = {'ca': {'app_title': 'AcousA - Anàlisi de la parla',
                           'values lie roughly between +5 (no dysphonia) and −5 (severe dysphonia). However, '
                           'since the individual parameters can span a wide range of values, scores outside '
                           'that interval are also possible.',
-        'asos_dsi_formula': 'DSI = 0.13 · MPT + 0.0053 · F0_max − 0.26 · I_min − 1.18 · Jitter + 12.4',
-        'asos_dsi_legend': 'MPT: maximum phonation time (duration, in seconds). · F0_max: maximum '
+        'asos_dsi_formula': 'DSI = 0.13 · MPT + 0.0053 · F0_high − 0.26 · I_min − 1.18 · Jitter + 12.4',
+        'asos_dsi_formula_f0max': 'DSI = 0.13 · MPT + 0.0053 · F0_max − 0.26 · I_min − 1.18 · Jitter + 12.4',
+        'asos_dsi_legend': 'MPT: maximum phonation time (duration, in seconds). · F0_high: estimated highest '
+                           'fundamental frequency = mean F0 + 6 semitones (Hz). · I_min: approximate '
+                           'minimum intensity (dB). · Jitter: jitter percentage (%).',
+        'asos_dsi_legend_f0max': 'MPT: maximum phonation time (duration, in seconds). · F0_max: maximum '
                            'fundamental frequency (Hz). · I_min: minimum intensity (dB). · Jitter: jitter '
                            'percentage (%).',
         'asos_dsi_range_note': 'Orientative interpretation: as a general reference, ~+5 indicates absence of dysphonia and ~−5 a severe dysphonia; values > 5 suggest good voice quality and values < 5 poorer voice quality. If the age is known (between 20 and 79 years), the result is also compared with the age- and sex-adjusted normative value.',
@@ -925,8 +941,10 @@ LANG_TEXTS = {'ca': {'app_title': 'AcousA - Anàlisi de la parla',
         'asos_dsi_prediction_unavailable': 'The age- and sex-adjusted reference is only available for ages 20 to 79, so this result is interpreted with the general reference only.',
         'asos_dsi_reference_source': 'Source of the normative values: Hakkesteegt et al., 2006, Folia Phoniatr Logop 58:264-273.',
         'asos_dsi_unavailable': 'The DSI could not be computed for this recording because one of the '
-                                'required measures is missing (MPT, maximum F0, minimum intensity or jitter).',
-        'asos_dsi_approx_note': 'Note: I_min is approximated from the minimum intensity of the sustained /a/, not from a softest-phonation task in dB SPL as in the reference studies. The score may therefore be biased downwards relative to the normative values.',
+                                'required measures is missing (MPT, high F0, minimum intensity or jitter).',
+        'asos_dsi_approx_note': 'Note: this DSI uses two approximations. F0_high is an estimate (mean F0 + 6 semitones), not the measured maximum F0, and I_min is taken from the minimum intensity of the sustained /a/, in uncalibrated dB, not from a dedicated phonation task as in the reference studies. The DSI may therefore come out lower than the paper’s reference values. It is an orientative score, not a diagnosis.',
+        'asos_dsi_approx_note_f0max': 'Note: I_min is approximated from the minimum intensity of the sustained /a/, not from a specific task as in the reference studies. The score may therefore be biased downwards relative to the normative values.',
+        'asos_dsi_f0_note': 'Why is F0_high estimated? The original DSI uses the highest pitch reached in an upward pitch sweep, which this task does not include. We therefore estimate F0_high as the mean F0 of your comfortable-pitch vowel plus 6 semitones (the interval usually needed to raise pitch for a spoken question in chest voice), i.e. multiplied by about 1.41.',
         'asos_dsi_label_good': 'Good voice quality (orientative)',
         'asos_dsi_label_mid': 'Intermediate voice quality (orientative)',
         'asos_dsi_label_severe': 'Marked voice impairment (orientative)',
@@ -1149,7 +1167,7 @@ LANG_TEXTS = {'ca': {'app_title': 'AcousA - Anàlisi de la parla',
               },
         'asos_measure_help': {
               'dsi': (
-                  'Dysphonia Severity Index (DSI): a global voice-quality indicator combining MPT, maximum F0, minimum intensity and jitter. Higher values indicate better voice quality. The normal band depends on age and sex.'
+                  'Dysphonia Severity Index (DSI): a global voice-quality indicator combining MPT, estimated high F0, minimum intensity and jitter. Higher values indicate better voice quality. The normal band depends on age and sex.'
               ),
               'mpt': (
                   "Maximum phonation time (MPT): duration, in seconds, of the continuous voiced "
