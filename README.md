@@ -4,6 +4,10 @@ Web application for the acoustic analysis of speech recordings, developed at the
 
 This project is funded by MCIN/AEI, reference PID2022-139004OA-I00.
 
+**Authors:** Laboratori de Fonètica, Universitat de Barcelona.
+
+**Related publication:** this software accompanies the paper **[PAPER TITLE]**, in preparation.
+
 ## Tasks
 
 | Task | What it measures |
