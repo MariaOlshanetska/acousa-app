@@ -6,7 +6,7 @@ This project is funded by MCIN/AEI, reference PID2022-139004OA-I00.
 
 **Authors:** Laboratori de Fonètica, Universitat de Barcelona.
 
-**Related publication:** this software accompanies the paper **[PAPER TITLE]**, in preparation.
+**Related publication:** this software accompanies the paper *A web-based automatic speech analysis tool for clinical assessment of motor speech and voice disorders*, by Wendy Elvira-García, Maria Olshanetska, Mercè Prat and Miguel Ángel Santos-Santos (in preparation).
 
 ## Tasks
 
