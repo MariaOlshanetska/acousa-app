@@ -38,6 +38,11 @@ from core.config import (
     templates,
 )
 from core.tasks import TASKS
+from core.dsi_adapted import (
+    DSI_ADAPTED_METHOD,
+    DSI_ADAPTED_REFERENCE,
+    compute_dsi_adapted,
+)
 from core.texts import DEFAULT_LANG, get_texts
 from core.utils import (
     MIN_DURATION_SEC,
@@ -1173,9 +1178,11 @@ def _localize_dsi_payload(payload: dict[str, Any], ui: dict[str, Any]) -> dict[s
     """Refresca els textos del DSI desat a la meta amb la llengua actual al re-render.
 
     Mantenim el valor calculat i la disponibilitat (no depenen de la llengua) i tornem a
-    agafar els textos i l'etiqueta orientativa des de `ui`. Així el DSI segueix la llengua
-    quan es canvia d'idioma o s'obre l'enllaç compartible, i la caixa i el número sobreviuen
-    sempre al re-render.
+    agafar els textos des de `ui`. Hi ha TRES generacions de metas desades:
+    - gen1: DSI amb la F0 màxima mesurada (sense `f0_high_method`): textos `*_f0max`.
+    - gen2: `f0_high_method == "mean_plus_6st"` sense `dsi_method`: DSI original amb F0 mitjana
+      + 6 st, I_mín i predicció d'Hakkesteegt: textos `*_v2` (el que es va mostrar aleshores).
+    - gen3: `dsi_method == "adapted_v1"`: DSI adaptat, textos actuals.
     """
     if payload.get("task") != "asos":
         return payload
@@ -1183,25 +1190,36 @@ def _localize_dsi_payload(payload: dict[str, Any], ui: dict[str, Any]) -> dict[s
     if not isinstance(dsi, dict):
         return payload
 
+    if dsi.get("dsi_method") == DSI_ADAPTED_METHOD:
+        dsi["label"] = _dsi_label(dsi.get("value"), dsi.get("available"), ui)
+        _dsi_adapted_texts(dsi, ui)
+        payload["dsi"] = dsi
+        return payload
+
     value = dsi.get("value")
     available = dsi.get("available")
-
-    # Mateixa classificació de llindar que al primer render (font única: `_dsi_label`).
-    dsi["label"] = _dsi_label(value, available, ui)
-    dsi["title"] = _ui_text(ui, "asos_dsi_title", dsi.get("title", ""))
-    dsi["intro"] = _ui_text(ui, "asos_dsi_intro", dsi.get("intro", ""))
-    # Les metas antigues (sense `f0_high_method`) es van calcular amb la F0 màxima mesurada:
-    # descrivim aquell mètode amb els textos "legacy" i no afirmem el mètode nou.
-    new_method = dsi.get("f0_high_method") == "mean_plus_6st"
-    sfx = "" if new_method else "_f0max"
-    dsi["formula"] = _ui_text(ui, "asos_dsi_formula" + sfx, dsi.get("formula", ""))
-    dsi["legend"] = _ui_text(ui, "asos_dsi_legend" + sfx, dsi.get("legend", ""))
-    dsi["f0_note"] = _ui_text(ui, "asos_dsi_f0_note", "") if new_method else ""
-    dsi["range_note"] = _ui_text(ui, "asos_dsi_range_note", dsi.get("range_note", ""))
-    dsi["unavailable"] = _ui_text(ui, "asos_dsi_unavailable", dsi.get("unavailable", ""))
-    dsi["approx_note"] = _ui_text(
-        ui, "asos_dsi_approx_note" + sfx, dsi.get("approx_note", "")
-    )
+    dsi["label"] = _dsi_label_legacy(value, available, ui)
+    dsi["title"] = _ui_text(ui, "asos_dsi_title_v2", dsi.get("title", ""))
+    dsi["intro"] = _ui_text(ui, "asos_dsi_intro_v2", dsi.get("intro", ""))
+    # gen1 (sense `f0_high_method`): F0 màxima mesurada; gen2: F0 mitjana + 6 st.
+    gen2 = dsi.get("f0_high_method") == "mean_plus_6st"
+    if gen2:
+        dsi["formula"] = _ui_text(ui, "asos_dsi_formula_v2", dsi.get("formula", ""))
+        dsi["legend"] = _ui_text(ui, "asos_dsi_legend_v2", dsi.get("legend", ""))
+        dsi["approx_note"] = _ui_text(ui, "asos_dsi_approx_note_v2", dsi.get("approx_note", ""))
+        dsi["f0_note"] = _ui_text(ui, "asos_dsi_f0_note", "")
+    else:
+        dsi["formula"] = _ui_text(ui, "asos_dsi_formula_f0max", dsi.get("formula", ""))
+        dsi["legend"] = _ui_text(ui, "asos_dsi_legend_f0max", dsi.get("legend", ""))
+        dsi["approx_note"] = _ui_text(ui, "asos_dsi_approx_note_f0max", dsi.get("approx_note", ""))
+        dsi["f0_note"] = ""
+    dsi["range_note"] = _ui_text(ui, "asos_dsi_range_note_v2", dsi.get("range_note", ""))
+    dsi["unavailable"] = _ui_text(ui, "asos_dsi_unavailable_v2", dsi.get("unavailable", ""))
+    # Camps del DSI adaptat: no existeixen a les metas antigues.
+    dsi["subtitle"] = ""
+    dsi["method"] = []
+    dsi["method_title"] = ""
+    dsi["reference"] = ""
     _dsi_norm_texts(dsi, ui)
     payload["dsi"] = dsi
     return payload
@@ -1544,7 +1562,7 @@ def _clinical_hover(
     def txt(text_key: str) -> str:
         return str(hover_texts.get(text_key, ""))
 
-    if key == "dsi":
+    if key in {"dsi", "dsi_adapted"}:
         # Indicador global: no genera missatge clínic propi (no entra a les alteracions).
         return ""
     if key == "mpt":
@@ -1595,72 +1613,28 @@ def _clinical_hover(
     return ""
 
 
-def _compute_dsi(row0: dict[str, Any]) -> float | None:
-    """Calcula l'Índex de Severitat de la Disfonia (DSI).
+def _compute_dsi_adapted(row0: dict[str, Any]) -> float | None:
+    """Calcula el DSI adaptat (indicador propi i provisional, NO el DSI validat).
 
-    Fórmula: DSI = 0,13 · MPT + 0,0053 · F0_alta − 0,26 · I_mín − 1,18 · Jitter + 12,4
-    amb MPT en segons, F0_alta en Hz, I_mín en dB i Jitter en percentatge (%).
-    F0_alta és una ESTIMACIÓ (`f0_high_6st_hz` = F0 mitjana de la vocal + 6 semitons), no la F0
-    màxima mesurada; I_mín és el mínim d'intensitat de la vocal (aproximació).
-    Retorna None si falta alguna de les quatre mesures (o no és finita), de manera que
-    la interfície mostri el DSI com a no disponible en comptes d'un valor erroni.
-
-    La comparació amb els valors normatius per edat i sexe es fa a `_dsi_normative`.
+    Fórmula (vegeu `core/dsi_adapted.py`):
+        0,13 · MPT + 0,0053 · F0_alta − 1,18 · Jitter − 2,16
+    amb MPT = columna `mpt` (s), F0_alta = `f0_high_6st_hz` (F0 mitjana + 6 semitons, Hz) i
+    Jitter = `jitter_pct` (%). El terme d'intensitat mínima se substitueix per una constant
+    (I_mín = 56 dB); `i_low_db` i `f0_max_hz` ja no hi intervenen. L'escala del DSI original
+    (+5/−5) NO s'hi aplica. Retorna None si falta alguna entrada o no és finita.
     """
-    mpt = _safe_float(row0.get("mpt"))
-    # Només usem la F0_alta estimada. Si un CSV antic no té la columna, retornem None en comptes
-    # de barrejar definicions (F0 màxima vs. estimada); les anàlisis noves sempre la porten.
-    f0_high = _safe_float(row0.get("f0_high_6st_hz"))
-    i_low = _safe_float(row0.get("i_low_db"))
-    jitter = _safe_float(row0.get("jitter_pct"))
-    if mpt is None or f0_high is None or i_low is None or jitter is None:
-        return None
-    dsi = 0.13 * mpt + 0.0053 * f0_high - 0.26 * i_low - 1.18 * jitter + 12.4
-    return round(dsi, 2)
-
-
-# Valors normatius del DSI per edat i sexe.
-# Font: Hakkesteegt MM, Brocaar MP, Wieringa MH, Feenstra L. "Influence of Age and Gender on the
-# Dysphonia Severity Index. A Study of Normative Values". Folia Phoniatr Logop 2006;58:264-273
-# (DOI 10.1159/000093183). Mostra: 118 adults sense queixes vocals (69 dones, 49 homes), 20-79 anys.
-# Rectes de predicció: dones 6,33 - 0,05·edat; homes 5,96 - 0,05·edat. L'efecte del sexe no va ser
-# significatiu, per això per a sexe desconegut/altre s'usa la fórmula mitjana 6,145 - 0,05·edat.
-DSI_NORM_AGE_MIN = 20
-DSI_NORM_AGE_MAX = 79
-DSI_NORM_PARAMS = {
-    # bucket: (intercept, SD del grup segons la taula 2 de l'article)
-    "f": (6.33, 2.01),
-    "m": (5.96, 1.94),
-    "other": (6.145, 2.00),
-}
-DSI_NORM_SLOPE = -0.05
-
-
-def _dsi_normative(age: Any, gender_value: str | None) -> dict[str, Any] | None:
-    """Predicció del DSI i rang de normalitat segons edat i sexe (Hakkesteegt et al., 2006).
-    Retorna {pred, min, max, sd, sex_bucket} o None si l'edat falta, no és numèrica o queda
-    fora de 20-79 anys (rang de l'estudi; no s'extrapola).
-    El rang de normalitat és pred ± 2·SD. Aproximació: l'article dona la SD del grup (no la SD
-    residual de la regressió). Amb ±2 SD, el z de les files de l'ASOS (centre = punt mig, SD =
-    amplada/4) queda dins de ±2 per a valors normals, igual que la resta de mesures.
-    """
-    age_f = _safe_float(age)
-    if age_f is None or age_f < DSI_NORM_AGE_MIN or age_f > DSI_NORM_AGE_MAX:
-        return None
-    bucket = _gender_bucket(gender_value) or "other"
-    intercept, sd = DSI_NORM_PARAMS[bucket]
-    pred = intercept + DSI_NORM_SLOPE * age_f
-    return {
-        "pred": round(pred, 3),
-        "min": round(pred - 2 * sd, 3),
-        "max": round(pred + 2 * sd, 3),
-        "sd": sd,
-        "sex_bucket": bucket,
-    }
+    value = compute_dsi_adapted(
+        _safe_float(row0.get("mpt")),
+        _safe_float(row0.get("f0_high_6st_hz")),
+        _safe_float(row0.get("jitter_pct")),
+    )
+    return round(value, 2) if value is not None else None
 
 
 def _dsi_norm_texts(dsi: dict[str, Any], ui) -> None:
-    """Omple els textos dependents de la llengua de la predicció normativa del DSI.
+    """Omple els textos de la predicció normativa del DSI (només metas antigues: gen1 i gen2).
+
+    El DSI adaptat (`adapted_v1`) no usa predicció per edat i sexe i no passa per aquí.
     Treballa a partir dels camps numèrics desats (`norm_*`); les metas antigues sense aquests
     camps es tracten com a "sense predicció" i no fallen.
     """
@@ -1681,55 +1655,96 @@ def _dsi_norm_texts(dsi: dict[str, Any], ui) -> None:
 
 
 def _dsi_label(value: Any, available: Any, ui) -> str:
-    """Etiqueta orientativa (no diagnòstica) del DSI segons el llindar ±5.
+    """Etiqueta orientativa (no diagnòstica) del DSI adaptat respecte a la referència dels controls.
 
-    Font única de veritat per a la classificació: valors > 5 -> bona qualitat vocal;
-    entre −5 i 5 -> intermèdia; < −5 -> alteració marcada. La fem servir tant al primer
-    render (`_build_dsi_payload`) com al re-render per canvi de llengua
-    (`_localize_dsi_payload`) perquè el llindar no es dupliqui en dos llocs.
+    Font única de veritat per a la classificació, usada al primer render
+    (`_build_dsi_payload`) i al re-render per canvi de llengua (`_localize_dsi_payload`):
+    dins del rang de referència (mitjana ± 2 SD), per sota o per sobre. No usa els llindars
+    ±5 del DSI original.
+    """
+    if not available or not isinstance(value, (int, float)):
+        return ""
+    if value < DSI_ADAPTED_REFERENCE["min"]:
+        return _ui_text(ui, "asos_dsi_label_below", "")
+    if value > DSI_ADAPTED_REFERENCE["max"]:
+        return _ui_text(ui, "asos_dsi_label_above", "")
+    return _ui_text(ui, "asos_dsi_label_within", "")
+
+
+def _dsi_label_legacy(value: Any, available: Any, ui) -> str:
+    """Etiqueta del DSI de les metas antigues (gen1 i gen2), segons els llindars ±5 de l'original.
+
+    Només per re-renderitzar resultats ja desats; el DSI adaptat usa `_dsi_label`.
     """
     if not available or not isinstance(value, (int, float)):
         return ""
     if value > 5:
-        return _ui_text(ui, "asos_dsi_label_good", "Qualitat vocal bona (orientatiu)")
+        return _ui_text(ui, "asos_dsi_label_good", "")
     if value < -5:
-        return _ui_text(ui, "asos_dsi_label_severe", "Alteració vocal marcada (orientatiu)")
-    return _ui_text(ui, "asos_dsi_label_mid", "Qualitat vocal intermèdia (orientatiu)")
+        return _ui_text(ui, "asos_dsi_label_severe", "")
+    return _ui_text(ui, "asos_dsi_label_mid", "")
 
 
-def _build_dsi_payload(
-    row0: dict[str, Any], ui, norm: dict[str, Any] | None = None
-) -> dict[str, Any]:
-    """Construeix el diccionari del DSI per a la plantilla (textos en català des de `ui`).
+def _dsi_fmt(x: float, ui) -> str:
+    """Formata un nombre amb 2 decimals i el separador decimal de la llengua (coma/punt)."""
+    return f"{x:.2f}".replace(".", _ui_text(ui, "asos_dsi_decimal_sep", "."))
 
-    Classifica la puntuació amb una etiqueta orientativa (no diagnòstica) via `_dsi_label`:
-    valors > 5 -> bona qualitat vocal; entre −5 i 5 -> intermèdia; < −5 -> alteració marcada.
+
+def _dsi_adapted_texts(dsi: dict[str, Any], ui) -> None:
+    """Omple els textos (dependents de la llengua) del DSI adaptat a partir dels camps numèrics."""
+    ref = DSI_ADAPTED_REFERENCE
+    dsi["title"] = _ui_text(ui, "asos_dsi_title", "DSI adaptat")
+    dsi["subtitle"] = _ui_text(ui, "asos_dsi_subtitle", "")
+    dsi["intro"] = _ui_text(ui, "asos_dsi_intro", "")
+    dsi["method_title"] = _ui_text(ui, "asos_dsi_method_title", "")
+    steps = ui.get("asos_dsi_method", []) if isinstance(ui, dict) else []
+    dsi["method"] = [str(x) for x in steps]
+    dsi["formula"] = _ui_text(ui, "asos_dsi_formula", "")
+    dsi["legend"] = _ui_text(ui, "asos_dsi_legend", "")
+    mean = dsi.get("ref_mean", ref["mean"])
+    sd = dsi.get("ref_sd", ref["sd"])
+    rmin = dsi.get("ref_min", ref["min"])
+    rmax = dsi.get("ref_max", ref["max"])
+    dsi["reference"] = _ui_text(ui, "asos_dsi_reference", "").format(
+        n=dsi.get("ref_n_recordings", ref["n_recordings"]),
+        age=dsi.get("ref_age", ref["age"]),
+        mean=_dsi_fmt(mean, ui), sd=_dsi_fmt(sd, ui),
+        min=_dsi_fmt(rmin, ui), max=_dsi_fmt(rmax, ui),
+    )
+    dsi["range_note"] = _ui_text(ui, "asos_dsi_range_note", "")
+    dsi["unavailable"] = _ui_text(ui, "asos_dsi_unavailable", "")
+    dsi["approx_note"] = _ui_text(ui, "asos_dsi_approx_note", "")
+    # Camps de generacions anteriors que el DSI adaptat no mostra.
+    dsi["f0_note"] = ""
+    dsi["prediction"] = ""
+    dsi["prediction_note"] = ""
+    dsi["reference_source"] = ""
+
+
+def _build_dsi_payload(row0: dict[str, Any], ui) -> dict[str, Any]:
+    """Construeix el diccionari del DSI adaptat per a la plantilla i la meta.
+
+    Desa els camps numèrics (valor, referència) perquè el re-render en una altra llengua no
+    necessiti el CSV, i els textos des de `ui`. `dsi_method = "adapted_v1"` el distingeix de
+    les metas antigues; `f0_high_method` continua sent "mean_plus_6st".
     """
-    value = _compute_dsi(row0)
+    value = _compute_dsi_adapted(row0)
     available = value is not None
-    label = _dsi_label(value, available, ui)
-
+    ref = DSI_ADAPTED_REFERENCE
     dsi = {
         "value": value,
         "available": available,
-        "label": label,
-        "norm_pred": norm["pred"] if norm else None,
-        "norm_min": norm["min"] if norm else None,
-        "norm_max": norm["max"] if norm else None,
-        "norm_sd": norm["sd"] if norm else None,
-        "norm_sex_bucket": norm["sex_bucket"] if norm else None,
-        "title": _ui_text(ui, "asos_dsi_title", "Índex de Severitat de la Disfonia (DSI)"),
-        "intro": _ui_text(ui, "asos_dsi_intro", ""),
-        "formula": _ui_text(ui, "asos_dsi_formula", ""),
-        "legend": _ui_text(ui, "asos_dsi_legend", ""),
-        "range_note": _ui_text(ui, "asos_dsi_range_note", ""),
-        "unavailable": _ui_text(ui, "asos_dsi_unavailable", ""),
-        "approx_note": _ui_text(ui, "asos_dsi_approx_note", ""),
-        "f0_note": _ui_text(ui, "asos_dsi_f0_note", ""),
-        # Mètode de F0_alta usat al càlcul; les metas antigues no el tenen (F0 màxima mesurada).
+        "label": _dsi_label(value, available, ui),
+        "dsi_method": DSI_ADAPTED_METHOD,
         "f0_high_method": "mean_plus_6st",
+        "ref_mean": ref["mean"],
+        "ref_sd": ref["sd"],
+        "ref_min": ref["min"],
+        "ref_max": ref["max"],
+        "ref_n_recordings": ref["n_recordings"],
+        "ref_age": ref["age"],
     }
-    _dsi_norm_texts(dsi, ui)
+    _dsi_adapted_texts(dsi, ui)
     return dsi
 
 
@@ -1823,6 +1838,8 @@ def _localize_asos_payload(payload: dict[str, Any], ui: dict[str, Any]) -> dict[
         return payload
 
     # També filtrem els resultats antics, desats abans d'ocultar F0 màxima i I mínima.
+    # La fila `dsi` de les metas antigues (gen1/gen2) es conserva amb la seva pròpia etiqueta;
+    # la del DSI adaptat és `dsi_adapted` (vegeu `_build_asos_rows`).
     rows = [r for r in (payload.get("rows") or []) if r.get("variable") not in _ASOS_HIDDEN_ROWS]
     gender_value = payload.get("gender_value")
 
@@ -1863,6 +1880,7 @@ def _localize_asos_payload(payload: dict[str, Any], ui: dict[str, Any]) -> dict[
 
 
 def _build_asos_rows(csv_path: Path, gender_value: str | None, ui, age: Any = None) -> tuple[list[dict[str, Any]], str, str, str, dict[str, Any]]:
+    """Files, textos globals i DSI adaptat de l'ASOS. `age` no s'usa actualment al DSI adaptat."""
     # encoding="utf-8-sig": el CSV l'escriu R (write_csv) amb un BOM UTF-8 al davant. Sense
     # això, el nom de la primera columna arriba com a "\ufeffmpt" i row0.get("mpt") torna None,
     # cosa que deixava el DSI com a "no disponible" tot i tenir totes les mesures. Amb utf-8-sig
@@ -1887,9 +1905,9 @@ def _build_asos_rows(csv_path: Path, gender_value: str | None, ui, age: Any = No
 
     rows: list[dict[str, Any]] = []
 
-    # F0 màxima i intensitat mínima només s'usen com a entrades del DSI (es mantenen al CSV
-    # i a row0): no tenen valors de normalitat i per si soles no signifiquen res, així que
-    # no es mostren com a files del gràfic.
+    # F0 màxima, intensitat mínima i F0_alta estimada no es mostren al gràfic (es mantenen al
+    # CSV i a row0): no tenen valors de normalitat i per si soles no signifiquen res. Només
+    # `f0_high_6st_hz` entra al DSI adaptat; la intensitat mínima ja no hi intervé.
     for measure, raw_val in row0.items():
         if measure in _ASOS_HIDDEN_ROWS:
             continue
@@ -2024,29 +2042,30 @@ def _build_asos_rows(csv_path: Path, gender_value: str | None, ui, age: Any = No
     else:
         f0_summary_text = ""
 
-    norm = _dsi_normative(age, gender_value)
-    dsi_payload = _build_dsi_payload(row0, ui, norm)
-    # Fila del DSI al perfil de resultats, la primera, només si hi ha valor i rang normatiu.
-    # hover_msg buit: no compta a `alteration_comments` ni canvia la interpretació global.
-    if dsi_payload.get("available") and norm is not None:
+    # `age` i `gender_value` no intervenen al DSI adaptat (referència única per a tothom).
+    dsi_payload = _build_dsi_payload(row0, ui)
+    # Fila del DSI adaptat al perfil de resultats, la primera, si hi ha valor. Variable pròpia
+    # (`dsi_adapted`, no `dsi`) perquè els resultats antics mantinguin la seva etiqueta.
+    # Centre = mitjana dels controls i SD = SD mostral, de manera que el rang mitjana ± 2 SD
+    # és coherent amb `_severity_from_z`. hover_msg buit: no compta a `alteration_comments`.
+    if dsi_payload.get("available"):
+        ref = DSI_ADAPTED_REFERENCE
         dsi_val = dsi_payload["value"]
-        center = (norm["min"] + norm["max"]) / 2.0
-        sd_row = (norm["max"] - norm["min"]) / 4.0
-        z = (dsi_val - center) / sd_row
+        z = (dsi_val - ref["mean"]) / ref["sd"]
         rows.insert(
             0,
             {
-                "variable": "dsi",
-                "label": label_map.get("dsi", "DSI"),
+                "variable": "dsi_adapted",
+                "label": label_map.get("dsi_adapted", "DSI adaptat"),
                 "value": round(dsi_val, 4),
                 "z": round(z, 2),
-                "help_text": help_map.get("dsi", ""),
+                "help_text": help_map.get("dsi_adapted", ""),
                 "hover_msg": "",
                 "severity": _severity_from_z(z),
                 "unit": "",
-                "normal_min": round(norm["min"], 4),
-                "normal_max": round(norm["max"], 4),
-                **_range_payload(dsi_val, norm["min"], norm["max"]),
+                "normal_min": round(ref["min"], 4),
+                "normal_max": round(ref["max"], 4),
+                **_range_payload(dsi_val, ref["min"], ref["max"]),
             },
         )
     return rows, interpretation_global, interpretation_comment, f0_summary_text, dsi_payload
@@ -2779,8 +2798,8 @@ async def analyze(
             "filename": Path(audio.filename).name if audio.filename else wav_path.name,
             "task": task,
             "task_label": task_cfg["label"][lang],
-            # L'edat es conserva a la meta; el DSI la usa per a la predicció normativa
-            # (només si és dins de 20-79 anys, vegeu `_dsi_normative`).
+            # L'edat es conserva a la meta, però el DSI adaptat NO l'usa actualment
+            # (referència única, vegeu `core/dsi_adapted.py`); tampoc `gender_value`.
             "age": age,
             "gender_value": final_gender,
             # DSI (Índex de Severitat de la Disfonia): diccionari amb el valor i els textos;

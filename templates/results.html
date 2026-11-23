@@ -226,7 +226,7 @@
             aria-labelledby="dsi-title"
             style="margin-top:1.25rem;padding:1.25rem 1.3rem;border-radius:1rem;border:2px solid rgba(214, 132, 92, 0.85);background:#fffaf7;box-shadow:0 1px 6px rgba(214,132,92,0.15);">
             <h3 id="dsi-title" style="margin:0 0 .6rem;font-size:1.2rem;color:#8a3d12;">
-              {{ dsi.title }}
+              {{ dsi.title }}{% if dsi.subtitle %} <span style="font-size:.85rem;font-weight:500;color:#777;">({{ dsi.subtitle }})</span>{% endif %}
             </h3>
 
             {% if dsi.available %}
@@ -242,16 +242,31 @@
               {% if dsi.intro %}
                 <p style="line-height:1.6;color:#444;margin:.35rem 0;">{{ dsi.intro }}</p>
               {% endif %}
-              {% if dsi.formula %}
+              {% if dsi.reference %}
+                <p style="line-height:1.6;color:#5a2a0d;font-weight:600;margin:.5rem 0;">{{ dsi.reference }}</p>
+              {% endif %}
+              {% if dsi.range_note and dsi.method %}
+                <p style="line-height:1.55;color:#555;margin:.35rem 0;">{{ dsi.range_note }}</p>
+              {% endif %}
+              {% if dsi.method %}
+                <details style="margin:.6rem 0;">
+                  <summary style="cursor:pointer;font-weight:700;color:#8a3d12;">{{ dsi.method_title }}</summary>
+                  <ol style="line-height:1.55;color:#444;margin:.5rem 0 .5rem 1.2rem;padding:0;">
+                    {% for step in dsi.method %}<li style="margin:.3rem 0;">{{ step }}</li>{% endfor %}
+                  </ol>
+                  {% if dsi.legend %}<p style="line-height:1.55;color:#555;margin:.35rem 0;">{{ dsi.legend }}</p>{% endif %}
+                </details>
+              {% endif %}
+              {% if dsi.formula and not dsi.method %}
                 <p style="margin:.6rem 0;font-family:monospace;font-size:1rem;color:#333;background:#fff3ea;padding:.5rem .7rem;border-radius:.5rem;">{{ dsi.formula }}</p>
               {% endif %}
-              {% if dsi.legend %}
+              {% if dsi.legend and not dsi.method %}
                 <p style="line-height:1.55;color:#555;margin:.35rem 0;">{{ dsi.legend }}</p>
               {% endif %}
               {% if dsi.f0_note %}
                 <p style="line-height:1.55;color:#555;margin:.35rem 0;">{{ dsi.f0_note }}</p>
               {% endif %}
-              {% if dsi.range_note %}
+              {% if dsi.range_note and not dsi.method %}
                 <p style="line-height:1.55;color:#555;margin:.35rem 0;">{{ dsi.range_note }}</p>
               {% endif %}
               {% if dsi.prediction %}
